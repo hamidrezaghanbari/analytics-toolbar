@@ -81,8 +81,22 @@ class InspectorToolbar {
               <button type="button" class="remove-path-btn">-</button>
             </div>
           </div>
+          <div id="attributions-container" class="form-section">
+            <label class="form-section-label">Attributions</label>
+            <div class="attribute-item">
+              <input type="text" name="attributeKey[]" placeholder="Key">
+              <div class="input-with-icon">
+                <input type="text" name="attributeValue[]" placeholder="Value">
+                <button type="button" class="inspect-attribute-btn toolbar-button icon-button" title="Inspect Element">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                </button>
+              </div>
+              <button type="button" class="remove-attribute-btn">-</button>
+            </div>
+          </div>
           <div class="form-actions">
             <button type="button" id="add-path-btn">Add Path</button>
+            <button type="button" id="add-attribute-btn">Add Attribute</button>
             <button type="submit">Create Event</button>
           </div>
         </form>
@@ -131,12 +145,22 @@ class InspectorToolbar {
     const addPathBtn = this.toolbar.querySelector('#add-path-btn');
     addPathBtn.addEventListener('click', () => this.addPathInput());
 
+    const addAttributeBtn = this.toolbar.querySelector('#add-attribute-btn');
+    addAttributeBtn.addEventListener('click', () => this.addAttributeInput());
+
     const form = this.toolbar.querySelector('#custom-event-form');
     form.addEventListener('submit', (e) => this.handleFormSubmit(e));
     
     this.toolbar.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-path-btn')) {
         this.removePathInput(e.target);
+      }
+      if (e.target.closest('.remove-attribute-btn')) {
+        this.removeAttributeInput(e.target.closest('.attribute-item'));
+      }
+      if (e.target.closest('.inspect-attribute-btn')) {
+        this.activeAttributeValueInput = e.target.closest('.input-with-icon').querySelector('input');
+        this.toggleInspector();
       }
     });
     
@@ -216,8 +240,13 @@ class InspectorToolbar {
     e.stopPropagation();
 
     const selector = this.getCssSelector(target);
-    this.toolbar.querySelector('#selector-display').textContent = selector;
-    this.toolbar.querySelector('#css-selector').value = selector;
+    if (this.activeAttributeValueInput) {
+      this.activeAttributeValueInput.value = selector;
+      this.activeAttributeValueInput = null;
+    } else {
+      this.toolbar.querySelector('#selector-display').textContent = selector;
+      this.toolbar.querySelector('#css-selector').value = selector;
+    }
     this.toggleInspector();
   }
 
@@ -245,6 +274,27 @@ class InspectorToolbar {
     button.parentElement.remove();
   }
 
+  addAttributeInput() {
+    const attributionsContainer = this.toolbar.querySelector('#attributions-container');
+    const newAttributeItem = document.createElement('div');
+    newAttributeItem.className = 'attribute-item';
+    newAttributeItem.innerHTML = `
+      <input type="text" name="attributeKey[]" placeholder="Key">
+      <div class="input-with-icon">
+        <input type="text" name="attributeValue[]" placeholder="Value">
+        <button type="button" class="inspect-attribute-btn toolbar-button icon-button" title="Inspect Element">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+        </button>
+      </div>
+      <button type="button" class="remove-attribute-btn">-</button>
+    `;
+    attributionsContainer.appendChild(newAttributeItem);
+  }
+
+  removeAttributeInput(item) {
+    item.remove();
+  }
+
   handleFormSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -253,7 +303,8 @@ class InspectorToolbar {
       eventType: formData.get('eventType'),
       countingType: formData.get('countingType'),
       cssSelector: formData.get('cssSelector'),
-      paths: []
+      paths: [],
+      attributions: []
     };
     const pathTypes = formData.getAll('pathType[]');
     const pathValues = formData.getAll('pathValue[]');
@@ -261,6 +312,14 @@ class InspectorToolbar {
       data.paths.push({
         type: pathTypes[i],
         value: pathValues[i]
+      });
+    }
+    const attributeKeys = formData.getAll('attributeKey[]');
+    const attributeValues = formData.getAll('attributeValue[]');
+    for (let i = 0; i < attributeKeys.length; i++) {
+      data.attributions.push({
+        key: attributeKeys[i],
+        value: attributeValues[i]
       });
     }
     console.log('Custom Event Created:', data);

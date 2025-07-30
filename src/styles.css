@@ -191,7 +191,8 @@
   box-sizing: border-box;
 }
 
-#paths-container {
+#paths-container,
+#attributions-container {
   grid-column: 2 / 3;
   display: flex;
   flex-direction: column;
@@ -205,6 +206,13 @@
   align-items: center;
 }
 
+#attributions-container .attribute-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
 .form-actions {
   grid-column: 2 / 3;
   display: flex;
@@ -213,7 +221,9 @@
 }
 
 #add-path-btn,
+#add-attribute-btn,
 .remove-path-btn,
+.remove-attribute-btn,
 #custom-event-form button[type="submit"] {
   padding: 8px 12px;
   border-radius: 4px;
@@ -222,23 +232,27 @@
   border: 1px solid transparent;
 }
 
-#add-path-btn {
+#add-path-btn,
+#add-attribute-btn {
   background-color: #666;
   color: white;
   border-color: #777;
 }
 
-#add-path-btn:hover {
+#add-path-btn:hover,
+#add-attribute-btn:hover {
   background-color: #777;
 }
 
-.remove-path-btn {
+.remove-path-btn,
+.remove-attribute-btn {
   background-color: #8b3a3a;
   color: white;
   border-color: #9d4b4b;
 }
 
-.remove-path-btn:hover {
+.remove-path-btn:hover,
+.remove-attribute-btn:hover {
   background-color: #a04f4f;
 }
 
