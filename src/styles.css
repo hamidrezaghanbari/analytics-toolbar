@@ -34,7 +34,7 @@
   border-radius: 10px;
   padding: 8px 6px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.15), 0 8px 32px rgba(37, 99, 235, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }
 
@@ -141,11 +141,22 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.toolbar-button.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border-color: #1d4ed8;
-  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+.toolbar-button.active,
+.create-event-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3) !important;
+}
+
+.create-event-button:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+.create-event-button svg {
+  stroke: white !important;
 }
 
 .toolbar-left {
@@ -182,9 +193,9 @@
 }
 
 .custom-event-form-container {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   padding: 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #cbd5e1;
   max-height: 75vh;
   overflow-y: auto;
   border-radius: 0 0 10px 10px;
@@ -226,8 +237,8 @@
 #custom-event-form select {
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #94a3b8;
+  background: #ffffff;
   color: #1e293b;
   width: 100%;
   box-sizing: border-box;
@@ -235,13 +246,14 @@
   font-size: 13px;
   font-weight: 400;
   height: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 #custom-event-form input:focus,
 #custom-event-form select:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
   background: #ffffff;
 }
 
@@ -384,8 +396,8 @@
 }
 
 [name="cssSelector"] {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
-    border-color: #cbd5e1 !important;
+    background: #ffffff !important;
+    border-color: #94a3b8 !important;
     color: #1e293b !important;
     font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace !important;
     font-size: 12px !important;
