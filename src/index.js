@@ -3,20 +3,20 @@ import './styles.css';
 class InspectorToolbar {
   constructor(options = {}) {
     this.options = {
-      // position: 'top',
-      // height: '50px',
-      // backgroundColor: '#333',
-      // textColor: '#fff',
       ...options
     };
     
     this.toolbar = null;
     this.isVisible = false;
+    this.isInspecting = false;
+    this.highlighter = null;
+    this.tooltip = null;
   }
 
   init() {
     this.createToolbar();
     this.attachToPage();
+    this.createInspectorElements();
     return this;
   }
 
@@ -30,8 +30,7 @@ class InspectorToolbar {
           <div class="toolbar-divider"></div>
           <div class="toolbar-actions">
             <button class="toolbar-button" id="inspect-btn">Inspect</button>
-            <button class="toolbar-button" id="settings-btn">Settings</button>
-            <button class="toolbar-button" id="website-btn">Website</button>
+            <div id="selector-display" class="selector-display"></div>
           </div>
         </div>
         <div class="toolbar-right">
@@ -44,14 +43,22 @@ class InspectorToolbar {
     this.bindEvents();
   }
 
+  createInspectorElements() {
+    this.highlighter = document.createElement('div');
+    this.highlighter.className = 'inspector-highlighter';
+    document.body.appendChild(this.highlighter);
+
+    this.tooltip = document.createElement('div');
+    this.tooltip.className = 'inspector-tooltip';
+    document.body.appendChild(this.tooltip);
+  }
+
   applyStyles() {
     const initialY = this.options.position === 'top' ? '-100%' : '100%';
     Object.assign(this.toolbar.style, {
       position: 'fixed',
-      // top: this.options.position === 'top' ? '0' : 'auto',
       bottom: this.options.position === 'bottom' ? '0' : '60px',
       left: '50%',
-      // right: '0',
       height: this.options.height,
       backgroundColor: this.options.backgroundColor,
       color: this.options.textColor,
@@ -64,12 +71,105 @@ class InspectorToolbar {
   bindEvents() {
     const closeBtn = this.toolbar.querySelector('.inspector-toolbar-close');
     closeBtn.addEventListener('click', () => this.hide());
+
+    const inspectBtn = this.toolbar.querySelector('#inspect-btn');
+    inspectBtn.addEventListener('click', () => this.toggleInspector());
+    
+    this.boundHandleMouseOver = this.handleMouseOver.bind(this);
+    this.boundHandleMouseOut = this.handleMouseOut.bind(this);
+    this.boundHandleClick = this.handleClick.bind(this);
   }
 
   attachToPage() {
     document.body.appendChild(this.toolbar);
   }
 
+  toggleInspector() {
+    this.isInspecting = !this.isInspecting;
+    if (this.isInspecting) {
+      this.startInspecting();
+    } else {
+      this.stopInspecting();
+    }
+  }
+
+  startInspecting() {
+    document.body.style.cursor = 'crosshair';
+    this.toolbar.querySelector('#inspect-btn').classList.add('active');
+    document.addEventListener('mouseover', this.boundHandleMouseOver);
+    document.addEventListener('mouseout', this.boundHandleMouseOut);
+    document.addEventListener('click', this.boundHandleClick, true);
+  }
+
+  stopInspecting() {
+    document.body.style.cursor = 'default';
+    this.toolbar.querySelector('#inspect-btn').classList.remove('active');
+    this.highlighter.style.display = 'none';
+    this.tooltip.style.display = 'none';
+    document.removeEventListener('mouseover', this.boundHandleMouseOver);
+    document.removeEventListener('mouseout', this.boundHandleMouseOut);
+    document.removeEventListener('click', this.boundHandleClick, true);
+  }
+
+  handleMouseOver(e) {
+    if (!this.isInspecting) return;
+    const target = e.target;
+    if (target === this.toolbar || this.toolbar.contains(target) || target === this.highlighter || target === this.tooltip) {
+      this.highlighter.style.display = 'none';
+      this.tooltip.style.display = 'none';
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    this.highlighter.style.display = 'block';
+    this.highlighter.style.top = `${rect.top + window.scrollY}px`;
+    this.highlighter.style.left = `${rect.left + window.scrollX}px`;
+    this.highlighter.style.width = `${rect.width}px`;
+    this.highlighter.style.height = `${rect.height}px`;
+
+    const selector = this.getCssSelector(target);
+    this.tooltip.style.display = 'block';
+    this.tooltip.style.top = `${rect.top + window.scrollY - 30}px`;
+    this.tooltip.style.left = `${rect.left + window.scrollX}px`;
+    this.tooltip.textContent = selector;
+  }
+  
+  handleMouseOut() {
+    if (!this.isInspecting) return;
+    this.highlighter.style.display = 'none';
+    this.tooltip.style.display = 'none';
+  }
+
+  handleClick(e) {
+    if (!this.isInspecting) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const target = e.target;
+    if (target === this.toolbar || this.toolbar.contains(target)) {
+      return;
+    }
+
+    const selector = this.getCssSelector(target);
+    this.toolbar.querySelector('#selector-display').textContent = selector;
+    this.toggleInspector();
+  }
+
+  getCssSelector(el) {
+    let path = [], parent;
+    while (parent = el.parentNode) {
+        let tag = el.tagName, siblings;
+        path.unshift(
+            el.id ? `#${el.id}` : (
+                siblings = parent.children,
+                [].filter.call(siblings, (sibling) => sibling.tagName === tag).length === 1 ? tag.toLowerCase() :
+                `${tag.toLowerCase()}:nth-child(${1 + [].indexOf.call(siblings, el)})`
+            )
+        );
+        el = parent;
+    }
+    return `${path.join(' > ')}`.toLowerCase();
+  }
+  
   show() {
     if (!this.isVisible) {
       this.toolbar.style.transform = 'translateX(-50%) translateY(0)';
@@ -84,6 +184,9 @@ class InspectorToolbar {
       this.toolbar.style.transform = `translateX(-50%) translateY(${translateY})`;
       this.isVisible = false;
     }
+    if (this.isInspecting) {
+        this.toggleInspector();
+    }
     return this;
   }
 
@@ -95,8 +198,19 @@ class InspectorToolbar {
     if (this.toolbar && this.toolbar.parentNode) {
       this.toolbar.parentNode.removeChild(this.toolbar);
     }
+    if (this.highlighter && this.highlighter.parentNode) {
+        this.highlighter.parentNode.removeChild(this.highlighter);
+    }
+    if (this.tooltip && this.tooltip.parentNode) {
+        this.tooltip.parentNode.removeChild(this.tooltip);
+    }
     this.toolbar = null;
+    this.highlighter = null;
+    this.tooltip = null;
     this.isVisible = false;
+    if (this.isInspecting) {
+        this.stopInspecting();
+    }
   }
 }
 

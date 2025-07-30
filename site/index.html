@@ -1,56 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspector Toolbar SDK Demo</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-        }
-        .demo-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        button {
-            background: #007cba;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background: #005a87;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspector Toolbar Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      margin: 0;
+      min-height: 200vh;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .header {
+      background: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+    .content {
+      padding: 20px 0;
+    }
+    .footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    button#my-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="demo-content">
-        <h1>Inspector Toolbar SDK Demo</h1>
-        <p>Click the buttons below to test the toolbar functionality:</p>
-        
-        <button onclick="toolbar.show()">Show Toolbar</button>
-        <button onclick="toolbar.hide()">Hide Toolbar</button>
-        <button onclick="toolbar.toggle()">Toggle Toolbar</button>
-        
-        <h2>Sample Content</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-    </div>
 
-    <script src="inspector-toolbar.js"></script>
-    <script>
-        const toolbar = new InspectorToolbar({
-            position: 'top',
-            backgroundColor: '#2d3748',
-            textColor: '#ffffff'
-        }).init().show();
-    </script>
+  <div class="container">
+    <header class="header">
+      <h1>Inspector Toolbar Demo Page</h1>
+      <p>This is a sample page to demonstrate the inspector toolbar.</p>
+    </header>
+
+    <main class="content">
+      <h2>Main Content Area</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed doeiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+      <button id="my-button">A Button</button>
+      <div class="some-class">
+        <p>A nested paragraph inside a div.</p>
+      </div>
+    </main>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2024</p>
+  </div>
+
+  <script src="inspector-toolbar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toolbar = new InspectorToolbar().init();
+      toolbar.show();
+    });
+  </script>
+
 </body>
 </html>
