@@ -3,10 +3,10 @@ import './styles.css';
 class InspectorToolbar {
   constructor(options = {}) {
     this.options = {
-      position: 'top',
-      height: '50px',
-      backgroundColor: '#333',
-      textColor: '#fff',
+      // position: 'top',
+      // height: '50px',
+      // backgroundColor: '#333',
+      // textColor: '#fff',
       ...options
     };
     
@@ -25,8 +25,18 @@ class InspectorToolbar {
     this.toolbar.className = 'inspector-toolbar';
     this.toolbar.innerHTML = `
       <div class="inspector-toolbar-content">
-        <span>Inspector Toolbar</span>
-        <button class="inspector-toolbar-close">×</button>
+        <div class="toolbar-left">
+          <div class="toolbar-logo">LOGO</div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-actions">
+            <button class="toolbar-button" id="inspect-btn">Inspect</button>
+            <button class="toolbar-button" id="settings-btn">Settings</button>
+            <button class="toolbar-button" id="website-btn">Website</button>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="inspector-toolbar-close">×</button>
+        </div>
       </div>
     `;
 
@@ -35,17 +45,18 @@ class InspectorToolbar {
   }
 
   applyStyles() {
+    const initialY = this.options.position === 'top' ? '-100%' : '100%';
     Object.assign(this.toolbar.style, {
       position: 'fixed',
-      top: this.options.position === 'top' ? '0' : 'auto',
-      bottom: this.options.position === 'bottom' ? '0' : 'auto',
-      left: '0',
-      right: '0',
+      // top: this.options.position === 'top' ? '0' : 'auto',
+      bottom: this.options.position === 'bottom' ? '0' : '60px',
+      left: '50%',
+      // right: '0',
       height: this.options.height,
       backgroundColor: this.options.backgroundColor,
       color: this.options.textColor,
       zIndex: '9999',
-      transform: this.options.position === 'top' ? 'translateY(-100%)' : 'translateY(100%)',
+      transform: `translateX(-50%) translateY(${initialY})`,
       transition: 'transform 0.3s ease'
     });
   }
@@ -61,7 +72,7 @@ class InspectorToolbar {
 
   show() {
     if (!this.isVisible) {
-      this.toolbar.style.transform = 'translateY(0)';
+      this.toolbar.style.transform = 'translateX(-50%) translateY(0)';
       this.isVisible = true;
     }
     return this;
@@ -70,7 +81,7 @@ class InspectorToolbar {
   hide() {
     if (this.isVisible) {
       const translateY = this.options.position === 'top' ? '-100%' : '100%';
-      this.toolbar.style.transform = `translateY(${translateY})`;
+      this.toolbar.style.transform = `translateX(-50%) translateY(${translateY})`;
       this.isVisible = false;
     }
     return this;

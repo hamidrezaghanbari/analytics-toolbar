@@ -2,7 +2,7 @@
   "name": "inspector-toolbar-sdk",
   "version": "1.0.0",
   "description": "JavaScript SDK for sticky toolbar",
-  "main": "dist/inspector-toolbar.js",
+  "main": "site/inspector-toolbar.js",
   "scripts": {
     "build": "webpack --mode=production",
     "dev": "webpack --mode=development --watch",
