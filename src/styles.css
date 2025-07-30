@@ -38,7 +38,7 @@
   height: 100%;
 }
 
-.inspector-toolbar-close {
+.inspector-toolbar-collapse {
   background: none;
   border: none;
   color: inherit;
@@ -54,7 +54,7 @@
   transition: background-color 0.2s ease;
 }
 
-.inspector-toolbar-close:hover {
+.inspector-toolbar-collapse:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -189,6 +189,23 @@
   color: white;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+#custom-event-form input.error,
+#custom-event-form select.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 1px #dc3545;
+}
+
+.required-badge {
+  background-color: #dc3545;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 5px;
+  font-weight: normal;
 }
 
 #paths-container,

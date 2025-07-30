@@ -34,22 +34,22 @@ class InspectorToolbar {
           </div>
         </div>
         <div class="toolbar-right">
-          <button class="inspector-toolbar-close">×</button>
+          <button class="inspector-toolbar-collapse">−</button>
         </div>
       </div>
       <div class="custom-event-form-container" style="display: none;">
         <form id="custom-event-form">
           <div class="form-grid">
             <div class="form-group">
-              <label for="event-category">Category</label>
-              <select id="event-category" name="category">
+              <label for="event-category">Category <span class="required-badge">Required</span></label>
+              <select id="event-category" name="category" required>
                 <option value="analytics">Analytics</option>
                 <option value="engagement">Engagement</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="event-type">Event Type</label>
-              <input type="text" id="event-type" name="eventType" list="event-type-list">
+              <label for="event-type">Event Type <span class="required-badge">Required</span></label>
+              <input type="text" id="event-type" name="eventType" list="event-type-list" required>
               <datalist id="event-type-list">
                 <option value="click">
                 <option value="scroll">
@@ -57,16 +57,16 @@ class InspectorToolbar {
               </datalist>
             </div>
             <div class="form-group">
-              <label for="counting-type">Counting Type</label>
-              <select id="counting-type" name="countingType">
+              <label for="counting-type">Counting Type <span class="required-badge">Required</span></label>
+              <select id="counting-type" name="countingType" required>
                 <option value="once">Once</option>
                 <option value="every_time">Every Time</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="css-selector">CSS Selector</label>
+              <label for="css-selector">CSS Selector <span class="required-badge">Required</span></label>
               <div class="input-with-icon">
-                <input type="text" id="css-selector" name="cssSelector">
+                <input type="text" id="css-selector" name="cssSelector" required>
                 <button type="button" id="css-selector-inspect-btn" class="toolbar-button icon-button" title="Inspect Element">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
                 </button>
@@ -74,19 +74,19 @@ class InspectorToolbar {
             </div>
           </div>
           <div id="paths-container" class="form-section">
-            <label class="form-section-label">Paths</label>
+            <label class="form-section-label">Paths <span class="required-badge">Required</span></label>
             <div class="path-item">
-              <input type="text" name="pathType[]" placeholder="Type">
-              <input type="text" name="pathValue[]" placeholder="Value">
+              <input type="text" name="pathType[]" placeholder="Type" required>
+              <input type="text" name="pathValue[]" placeholder="Value" required>
               <button type="button" class="remove-path-btn">-</button>
             </div>
           </div>
           <div id="attributions-container" class="form-section">
-            <label class="form-section-label">Attributions</label>
+            <label class="form-section-label">Attributions <span class="required-badge">Required</span></label>
             <div class="attribute-item">
-              <input type="text" name="attributeKey[]" placeholder="Key">
+              <input type="text" name="attributeKey[]" placeholder="Key" required>
               <div class="input-with-icon">
-                <input type="text" name="attributeValue[]" placeholder="Value">
+                <input type="text" name="attributeValue[]" placeholder="Value" required>
                 <button type="button" class="inspect-attribute-btn toolbar-button icon-button" title="Inspect Element">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
                 </button>
@@ -133,8 +133,8 @@ class InspectorToolbar {
   }
 
   bindEvents() {
-    const closeBtn = this.toolbar.querySelector('.inspector-toolbar-close');
-    closeBtn.addEventListener('click', () => this.hide());
+    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
+    collapseBtn.addEventListener('click', () => this.toggleCollapse());
 
     const inspectBtn = this.toolbar.querySelector('#css-selector-inspect-btn');
     inspectBtn.addEventListener('click', () => this.toggleInspector());
@@ -150,6 +150,19 @@ class InspectorToolbar {
 
     const form = this.toolbar.querySelector('#custom-event-form');
     form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+    
+    // Add real-time validation
+    form.addEventListener('input', (e) => {
+      if (e.target.hasAttribute('required')) {
+        this.validateField(e.target);
+      }
+    });
+    
+    form.addEventListener('blur', (e) => {
+      if (e.target.hasAttribute('required')) {
+        this.validateField(e.target);
+      }
+    });
     
     this.toolbar.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-path-btn')) {
@@ -263,8 +276,8 @@ class InspectorToolbar {
     const newPathItem = document.createElement('div');
     newPathItem.className = 'path-item';
     newPathItem.innerHTML = `
-      <input type="text" name="pathType[]" placeholder="Type" class="path-type">
-      <input type="text" name="pathValue[]" placeholder="Value" class="path-value">
+      <input type="text" name="pathType[]" placeholder="Type" class="path-type" required>
+      <input type="text" name="pathValue[]" placeholder="Value" class="path-value" required>
       <button type="button" class="remove-path-btn">-</button>
     `;
     pathsContainer.appendChild(newPathItem);
@@ -279,9 +292,9 @@ class InspectorToolbar {
     const newAttributeItem = document.createElement('div');
     newAttributeItem.className = 'attribute-item';
     newAttributeItem.innerHTML = `
-      <input type="text" name="attributeKey[]" placeholder="Key">
+      <input type="text" name="attributeKey[]" placeholder="Key" required>
       <div class="input-with-icon">
-        <input type="text" name="attributeValue[]" placeholder="Value">
+        <input type="text" name="attributeValue[]" placeholder="Value" required>
         <button type="button" class="inspect-attribute-btn toolbar-button icon-button" title="Inspect Element">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
         </button>
@@ -297,6 +310,80 @@ class InspectorToolbar {
 
   handleFormSubmit(e) {
     e.preventDefault();
+    
+    // Clear previous validation errors
+    this.clearValidationErrors();
+    
+    // Validate required fields
+    const requiredFields = ['category', 'eventType', 'countingType', 'cssSelector'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(fieldName => {
+      const field = e.target.querySelector(`[name="${fieldName}"]`);
+      if (!field.value.trim()) {
+        field.classList.add('error');
+        hasErrors = true;
+      }
+    });
+    
+    // Validate paths (at least one path with both type and value)
+    const pathTypeFields = e.target.querySelectorAll('input[name="pathType[]"]');
+    const pathValueFields = e.target.querySelectorAll('input[name="pathValue[]"]');
+    let hasValidPath = false;
+    
+    for (let i = 0; i < pathTypeFields.length; i++) {
+      const typeField = pathTypeFields[i];
+      const valueField = pathValueFields[i];
+      
+      if (typeField.value.trim() && valueField.value.trim()) {
+        hasValidPath = true;
+        typeField.classList.remove('error');
+        valueField.classList.remove('error');
+      } else if (typeField.value.trim() || valueField.value.trim()) {
+        // If one is filled but not both, show error
+        if (!typeField.value.trim()) typeField.classList.add('error');
+        if (!valueField.value.trim()) valueField.classList.add('error');
+        hasErrors = true;
+      }
+    }
+    
+    if (!hasValidPath) {
+      pathTypeFields.forEach(field => field.classList.add('error'));
+      pathValueFields.forEach(field => field.classList.add('error'));
+      hasErrors = true;
+    }
+    
+    // Validate attributes (at least one attribute with both key and value)
+    const attributeKeyFields = e.target.querySelectorAll('input[name="attributeKey[]"]');
+    const attributeValueFields = e.target.querySelectorAll('input[name="attributeValue[]"]');
+    let hasValidAttribute = false;
+    
+    for (let i = 0; i < attributeKeyFields.length; i++) {
+      const keyField = attributeKeyFields[i];
+      const valueField = attributeValueFields[i];
+      
+      if (keyField.value.trim() && valueField.value.trim()) {
+        hasValidAttribute = true;
+        keyField.classList.remove('error');
+        valueField.classList.remove('error');
+      } else if (keyField.value.trim() || valueField.value.trim()) {
+        // If one is filled but not both, show error
+        if (!keyField.value.trim()) keyField.classList.add('error');
+        if (!valueField.value.trim()) valueField.classList.add('error');
+        hasErrors = true;
+      }
+    }
+    
+    if (!hasValidAttribute) {
+      attributeKeyFields.forEach(field => field.classList.add('error'));
+      attributeValueFields.forEach(field => field.classList.add('error'));
+      hasErrors = true;
+    }
+    
+    if (hasErrors) {
+      return;
+    }
+    
     const formData = new FormData(e.target);
     const data = {
       category: formData.get('category'),
@@ -325,6 +412,21 @@ class InspectorToolbar {
     console.log('Custom Event Created:', data);
     this.toggleEventForm();
     e.target.reset();
+  }
+
+  clearValidationErrors() {
+    const form = this.toolbar.querySelector('#custom-event-form');
+    form.querySelectorAll('.error').forEach(field => {
+      field.classList.remove('error');
+    });
+  }
+
+  validateField(field) {
+    if (field.hasAttribute('required') && !field.value.trim()) {
+      field.classList.add('error');
+    } else {
+      field.classList.remove('error');
+    }
   }
 
   getCssSelector(el) {
@@ -365,6 +467,15 @@ class InspectorToolbar {
 
   toggle() {
     return this.isVisible ? this.hide() : this.show();
+  }
+
+  toggleCollapse() {
+    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
+    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
+    const isCollapsed = formContainer.style.display === 'none';
+    
+    formContainer.style.display = isCollapsed ? 'block' : 'none';
+    collapseBtn.textContent = isCollapsed ? '−' : '+';
   }
 
   destroy() {
