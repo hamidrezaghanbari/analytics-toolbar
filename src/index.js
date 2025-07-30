@@ -29,7 +29,6 @@ class InspectorToolbar {
           <div class="toolbar-logo">LOGO</div>
           <div class="toolbar-divider"></div>
           <div class="toolbar-actions">
-            <button class="toolbar-button" id="inspect-btn">Inspect</button>
             <button class="toolbar-button" id="create-event-btn">Create Custom Event</button>
             <div id="selector-display" class="selector-display"></div>
           </div>
@@ -66,7 +65,12 @@ class InspectorToolbar {
             </div>
             <div class="form-group">
               <label for="css-selector">CSS Selector</label>
-              <input type="text" id="css-selector" name="cssSelector">
+              <div class="input-with-icon">
+                <input type="text" id="css-selector" name="cssSelector">
+                <button type="button" id="css-selector-inspect-btn" class="toolbar-button icon-button" title="Inspect Element">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                </button>
+              </div>
             </div>
           </div>
           <div id="paths-container" class="form-section">
@@ -118,7 +122,7 @@ class InspectorToolbar {
     const closeBtn = this.toolbar.querySelector('.inspector-toolbar-close');
     closeBtn.addEventListener('click', () => this.hide());
 
-    const inspectBtn = this.toolbar.querySelector('#inspect-btn');
+    const inspectBtn = this.toolbar.querySelector('#css-selector-inspect-btn');
     inspectBtn.addEventListener('click', () => this.toggleInspector());
 
     const createEventBtn = this.toolbar.querySelector('#create-event-btn');
@@ -156,7 +160,7 @@ class InspectorToolbar {
 
   startInspecting() {
     document.body.style.cursor = 'crosshair';
-    this.toolbar.querySelector('#inspect-btn').classList.add('active');
+    this.toolbar.querySelector('#css-selector-inspect-btn').classList.add('active');
     document.addEventListener('mouseover', this.boundHandleMouseOver);
     document.addEventListener('mouseout', this.boundHandleMouseOut);
     document.addEventListener('click', this.boundHandleClick, true);
@@ -164,7 +168,7 @@ class InspectorToolbar {
 
   stopInspecting() {
     document.body.style.cursor = 'default';
-    this.toolbar.querySelector('#inspect-btn').classList.remove('active');
+    this.toolbar.querySelector('#css-selector-inspect-btn').classList.remove('active');
     this.highlighter.style.display = 'none';
     this.tooltip.style.display = 'none';
     document.removeEventListener('mouseover', this.boundHandleMouseOver);
