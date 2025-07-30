@@ -231,6 +231,8 @@ class InspectorToolbar {
     this.isInspecting = !this.isInspecting;
     if (this.isInspecting) {
       this.startInspecting();
+      // Auto-collapse form when starting inspection for better visibility
+      this.collapseForm();
     } else {
       this.stopInspecting();
     }
@@ -301,13 +303,22 @@ class InspectorToolbar {
       this.toolbar.querySelector('#css-selector').value = selector;
     }
     this.toggleInspector();
+    
+    // Auto-expand form when element is selected so user can see the populated content
+    this.expandForm();
   }
 
   toggleEventForm() {
     const formContainer = this.toolbar.querySelector('.custom-event-form-container');
     const createEventBtn = this.toolbar.querySelector('#create-event-btn');
     const isVisible = formContainer.style.display !== 'none';
-    formContainer.style.display = isVisible ? 'none' : 'block';
+    
+    if (isVisible) {
+      this.collapseForm();
+    } else {
+      this.expandForm();
+    }
+    
     createEventBtn.classList.toggle('active', !isVisible);
   }
 
@@ -576,13 +587,32 @@ class InspectorToolbar {
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     const isCollapsed = formContainer.style.display === 'none';
     
-    formContainer.style.display = isCollapsed ? 'block' : 'none';
+    if (isCollapsed) {
+      this.expandForm();
+    } else {
+      this.collapseForm();
+    }
+  }
+
+  collapseForm() {
+    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
+    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     
-    // Update icon
-    const icon = isCollapsed ? 
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>' :
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
+    formContainer.style.display = 'none';
     
+    // Update icon to show expand (down arrow)
+    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
+    collapseBtn.innerHTML = icon;
+  }
+
+  expandForm() {
+    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
+    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
+    
+    formContainer.style.display = 'block';
+    
+    // Update icon to show collapse (up arrow)
+    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>';
     collapseBtn.innerHTML = icon;
   }
 
