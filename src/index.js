@@ -45,6 +45,12 @@ class InspectorToolbar {
           </div>
         </div>
         <div class="toolbar-right">
+          <button class="toolbar-button hide-toolbar-button" id="hide-toolbar-btn" title="Hide Toolbar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
           <button class="inspector-toolbar-collapse">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6,9 12,15 18,9"></polyline>
@@ -52,7 +58,7 @@ class InspectorToolbar {
           </button>
         </div>
       </div>
-      <div class="custom-event-form-container" style="display: none;">
+      <div class="custom-event-form-container collapsed">
         <form id="custom-event-form">
           <div class="form-grid">
             <div class="form-group">
@@ -176,6 +182,9 @@ class InspectorToolbar {
   bindEvents() {
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     collapseBtn.addEventListener('click', () => this.toggleCollapse());
+
+    const hideBtn = this.toolbar.querySelector('#hide-toolbar-btn');
+    hideBtn.addEventListener('click', () => this.hide());
 
     const inspectBtn = this.toolbar.querySelector('#css-selector-inspect-btn');
     inspectBtn.addEventListener('click', () => this.toggleInspector());
@@ -311,7 +320,7 @@ class InspectorToolbar {
   toggleEventForm() {
     const formContainer = this.toolbar.querySelector('.custom-event-form-container');
     const createEventBtn = this.toolbar.querySelector('#create-event-btn');
-    const isVisible = formContainer.style.display !== 'none';
+    const isVisible = !formContainer.classList.contains('collapsed');
     
     if (isVisible) {
       this.collapseForm();
@@ -560,7 +569,10 @@ class InspectorToolbar {
   
   show() {
     if (!this.isVisible) {
-      this.toolbar.style.transform = 'translateX(-50%) translateY(0)';
+      this.toolbar.style.display = 'block';
+      setTimeout(() => {
+        this.toolbar.style.transform = 'translateX(-50%) translateY(0)';
+      }, 10);
       this.isVisible = true;
     }
     return this;
@@ -570,6 +582,9 @@ class InspectorToolbar {
     if (this.isVisible) {
       const translateY = this.options.position === 'top' ? '-100%' : '100%';
       this.toolbar.style.transform = `translateX(-50%) translateY(${translateY})`;
+      setTimeout(() => {
+        this.toolbar.style.display = 'none';
+      }, 300);
       this.isVisible = false;
     }
     if (this.isInspecting) {
@@ -584,8 +599,7 @@ class InspectorToolbar {
 
   toggleCollapse() {
     const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
-    const isCollapsed = formContainer.style.display === 'none';
+    const isCollapsed = formContainer.classList.contains('collapsed');
     
     if (isCollapsed) {
       this.expandForm();
@@ -598,7 +612,8 @@ class InspectorToolbar {
     const formContainer = this.toolbar.querySelector('.custom-event-form-container');
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     
-    formContainer.style.display = 'none';
+    // Add collapsed class for smooth transition
+    formContainer.classList.add('collapsed');
     
     // Update icon to show expand (down arrow)
     const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
@@ -609,7 +624,8 @@ class InspectorToolbar {
     const formContainer = this.toolbar.querySelector('.custom-event-form-container');
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     
-    formContainer.style.display = 'block';
+    // Add expanded class for smooth transition
+    formContainer.classList.remove('collapsed');
     
     // Update icon to show collapse (up arrow)
     const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>';
