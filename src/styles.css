@@ -57,6 +57,8 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .toolbar-button {
@@ -84,10 +86,10 @@
     font-family: 'Courier New', Courier, monospace;
     color: #eee;
     margin-left: 10px;
-    min-width: 150px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-x: auto;
+    flex: 1;
+    max-width: 450px;
 }
 
 .inspector-highlighter {
