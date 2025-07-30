@@ -288,3 +288,42 @@
 #custom-event-form button[type="submit"]:hover {
   background-color: #0056b3;
 }
+
+#custom-event-form button[type="submit"]:disabled {
+  background-color: #666;
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #555;
+}
+
+.api-message {
+  grid-column: 1 / -1;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+.api-message.success {
+  background-color: #28a745;
+  color: white;
+  border: 1px solid #1e7e34;
+}
+
+.api-message.error {
+  background-color: #dc3545;
+  color: white;
+  border: 1px solid #c82333;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

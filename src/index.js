@@ -409,9 +409,61 @@ class InspectorToolbar {
         value: attributeValues[i]
       });
     }
-    console.log('Custom Event Created:', data);
-    this.toggleEventForm();
-    e.target.reset();
+    
+    this.showLoadingState();
+    this.callApi(data);
+  }
+
+  showLoadingState() {
+    const submitBtn = this.toolbar.querySelector('#custom-event-form button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating Event...';
+  }
+
+  hideLoadingState() {
+    const submitBtn = this.toolbar.querySelector('#custom-event-form button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Event';
+  }
+
+  showMessage(message, type = 'success') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `api-message ${type}`;
+    messageDiv.textContent = message;
+    
+    const form = this.toolbar.querySelector('#custom-event-form');
+    form.appendChild(messageDiv);
+    
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 5000);
+  }
+
+  async callApi(data) {
+    try {
+      const response = await fetch('/someapimock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      this.hideLoadingState();
+      this.showMessage('Event created successfully!', 'success');
+      this.toggleEventForm();
+      this.toolbar.querySelector('#custom-event-form').reset();
+      
+    } catch (error) {
+      this.hideLoadingState();
+      this.showMessage(`Error creating event: ${error.message}`, 'error');
+      console.error('API Error:', error);
+    }
   }
 
   clearValidationErrors() {
