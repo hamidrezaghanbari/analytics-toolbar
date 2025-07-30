@@ -26,7 +26,7 @@ class InspectorToolbar {
     this.toolbar.innerHTML = `
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
-          <div class="toolbar-logo">LOGO</div>
+          <div class="toolbar-logo">WebAnalytics</div>
           <div class="toolbar-divider"></div>
           <div class="toolbar-actions">
             <button class="toolbar-button" id="create-event-btn">Create Custom Event</button>
