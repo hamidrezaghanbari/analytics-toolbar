@@ -26,15 +26,30 @@ class InspectorToolbar {
     this.toolbar.innerHTML = `
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
-          <div class="toolbar-logo">WebAnalytics</div>
+          <div class="toolbar-logo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Inspector Pro
+          </div>
           <div class="toolbar-divider"></div>
           <div class="toolbar-actions">
-            <button class="toolbar-button" id="create-event-btn">Create Custom Event</button>
-            <div id="selector-display" class="selector-display"></div>
+            <button class="toolbar-button" id="create-event-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create Event
+            </button>
           </div>
         </div>
         <div class="toolbar-right">
-          <button class="inspector-toolbar-collapse">−</button>
+          <button class="inspector-toolbar-collapse">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </button>
         </div>
       </div>
       <div class="custom-event-form-container" style="display: none;">
@@ -74,15 +89,38 @@ class InspectorToolbar {
             </div>
           </div>
           <div id="paths-container" class="form-section">
-            <label class="form-section-label">Paths <span class="required-badge">Required</span></label>
+            <div class="form-section-header">
+              <label class="form-section-label">Paths <span class="required-badge">Required</span></label>
+              <button type="button" id="add-path-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Path
+              </button>
+            </div>
             <div class="path-item">
               <input type="text" name="pathType[]" placeholder="Type" required>
               <input type="text" name="pathValue[]" placeholder="Value" required>
-              <button type="button" class="remove-path-btn">-</button>
+              <button type="button" class="remove-path-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
           <div id="attributions-container" class="form-section">
-            <label class="form-section-label">Attributions <span class="required-badge">Required</span></label>
+            <div class="form-section-header">
+              <label class="form-section-label">Attributions <span class="required-badge">Required</span></label>
+              <button type="button" id="add-attribute-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Attribute
+              </button>
+            </div>
             <div class="attribute-item">
               <input type="text" name="attributeKey[]" placeholder="Key" required>
               <div class="input-with-icon">
@@ -91,12 +129,15 @@ class InspectorToolbar {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
                 </button>
               </div>
-              <button type="button" class="remove-attribute-btn">-</button>
+              <button type="button" class="remove-attribute-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
           <div class="form-actions">
-            <button type="button" id="add-path-btn">Add Path</button>
-            <button type="button" id="add-attribute-btn">Add Attribute</button>
             <button type="submit">Create Event</button>
           </div>
         </form>
@@ -257,7 +298,6 @@ class InspectorToolbar {
       this.activeAttributeValueInput.value = selector;
       this.activeAttributeValueInput = null;
     } else {
-      this.toolbar.querySelector('#selector-display').textContent = selector;
       this.toolbar.querySelector('#css-selector').value = selector;
     }
     this.toggleInspector();
@@ -278,7 +318,12 @@ class InspectorToolbar {
     newPathItem.innerHTML = `
       <input type="text" name="pathType[]" placeholder="Type" class="path-type" required>
       <input type="text" name="pathValue[]" placeholder="Value" class="path-value" required>
-      <button type="button" class="remove-path-btn">-</button>
+      <button type="button" class="remove-path-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     `;
     pathsContainer.appendChild(newPathItem);
   }
@@ -299,7 +344,12 @@ class InspectorToolbar {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
         </button>
       </div>
-      <button type="button" class="remove-attribute-btn">-</button>
+      <button type="button" class="remove-attribute-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     `;
     attributionsContainer.appendChild(newAttributeItem);
   }
@@ -527,7 +577,13 @@ class InspectorToolbar {
     const isCollapsed = formContainer.style.display === 'none';
     
     formContainer.style.display = isCollapsed ? 'block' : 'none';
-    collapseBtn.textContent = isCollapsed ? '−' : '+';
+    
+    // Update icon
+    const icon = isCollapsed ? 
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>' :
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
+    
+    collapseBtn.innerHTML = icon;
   }
 
   destroy() {
