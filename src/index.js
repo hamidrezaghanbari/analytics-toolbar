@@ -30,12 +30,58 @@ class InspectorToolbar {
           <div class="toolbar-divider"></div>
           <div class="toolbar-actions">
             <button class="toolbar-button" id="inspect-btn">Inspect</button>
+            <button class="toolbar-button" id="create-event-btn">Create Custom Event</button>
             <div id="selector-display" class="selector-display"></div>
           </div>
         </div>
         <div class="toolbar-right">
           <button class="inspector-toolbar-close">×</button>
         </div>
+      </div>
+      <div class="custom-event-form-container" style="display: none;">
+        <form id="custom-event-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="event-category">Category</label>
+              <select id="event-category" name="category">
+                <option value="analytics">Analytics</option>
+                <option value="engagement">Engagement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="event-type">Event Type</label>
+              <input type="text" id="event-type" name="eventType" list="event-type-list">
+              <datalist id="event-type-list">
+                <option value="click">
+                <option value="scroll">
+                <option value="submit">
+              </datalist>
+            </div>
+            <div class="form-group">
+              <label for="counting-type">Counting Type</label>
+              <select id="counting-type" name="countingType">
+                <option value="once">Once</option>
+                <option value="every_time">Every Time</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="css-selector">CSS Selector</label>
+              <input type="text" id="css-selector" name="cssSelector">
+            </div>
+          </div>
+          <div id="paths-container" class="form-section">
+            <label class="form-section-label">Paths</label>
+            <div class="path-item">
+              <input type="text" name="pathType[]" placeholder="Type">
+              <input type="text" name="pathValue[]" placeholder="Value">
+              <button type="button" class="remove-path-btn">-</button>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="add-path-btn">Add Path</button>
+            <button type="submit">Create Event</button>
+          </div>
+        </form>
       </div>
     `;
 
@@ -74,6 +120,21 @@ class InspectorToolbar {
 
     const inspectBtn = this.toolbar.querySelector('#inspect-btn');
     inspectBtn.addEventListener('click', () => this.toggleInspector());
+
+    const createEventBtn = this.toolbar.querySelector('#create-event-btn');
+    createEventBtn.addEventListener('click', () => this.toggleEventForm());
+
+    const addPathBtn = this.toolbar.querySelector('#add-path-btn');
+    addPathBtn.addEventListener('click', () => this.addPathInput());
+
+    const form = this.toolbar.querySelector('#custom-event-form');
+    form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+    
+    this.toolbar.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-path-btn')) {
+        this.removePathInput(e.target);
+      }
+    });
     
     this.boundHandleMouseOver = this.handleMouseOver.bind(this);
     this.boundHandleMouseOut = this.handleMouseOut.bind(this);
@@ -141,17 +202,66 @@ class InspectorToolbar {
 
   handleClick(e) {
     if (!this.isInspecting) return;
-    e.preventDefault();
-    e.stopPropagation();
     
     const target = e.target;
     if (target === this.toolbar || this.toolbar.contains(target)) {
       return;
     }
+    
+    e.preventDefault();
+    e.stopPropagation();
 
     const selector = this.getCssSelector(target);
     this.toolbar.querySelector('#selector-display').textContent = selector;
+    this.toolbar.querySelector('#css-selector').value = selector;
     this.toggleInspector();
+  }
+
+  toggleEventForm() {
+    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
+    const createEventBtn = this.toolbar.querySelector('#create-event-btn');
+    const isVisible = formContainer.style.display !== 'none';
+    formContainer.style.display = isVisible ? 'none' : 'block';
+    createEventBtn.classList.toggle('active', !isVisible);
+  }
+
+  addPathInput() {
+    const pathsContainer = this.toolbar.querySelector('#paths-container');
+    const newPathItem = document.createElement('div');
+    newPathItem.className = 'path-item';
+    newPathItem.innerHTML = `
+      <input type="text" name="pathType[]" placeholder="Type" class="path-type">
+      <input type="text" name="pathValue[]" placeholder="Value" class="path-value">
+      <button type="button" class="remove-path-btn">-</button>
+    `;
+    pathsContainer.appendChild(newPathItem);
+  }
+
+  removePathInput(button) {
+    button.parentElement.remove();
+  }
+
+  handleFormSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      category: formData.get('category'),
+      eventType: formData.get('eventType'),
+      countingType: formData.get('countingType'),
+      cssSelector: formData.get('cssSelector'),
+      paths: []
+    };
+    const pathTypes = formData.getAll('pathType[]');
+    const pathValues = formData.getAll('pathValue[]');
+    for (let i = 0; i < pathTypes.length; i++) {
+      data.paths.push({
+        type: pathTypes[i],
+        value: pathValues[i]
+      });
+    }
+    console.log('Custom Event Created:', data);
+    this.toggleEventForm();
+    e.target.reset();
   }
 
   getCssSelector(el) {
