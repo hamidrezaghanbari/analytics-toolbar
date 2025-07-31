@@ -3,179 +3,1173 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inspector Toolbar Demo</title>
+  <title>AmazonClone - Online Shopping for Electronics, Computers, Books & More</title>
   <style>
-    body {
-      font-family: sans-serif;
-      line-height: 1.6;
-      padding: 20px;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    h1, h2, h3 {
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f3f3f3;
       color: #333;
+      line-height: 1.4;
     }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      overflow: hidden; /* To contain floats */
-    }
+    
+    /* Header Styles */
     .header {
-      background: #f4f4f4;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-    .content {
-      padding: 20px 0;
-    }
-    .footer {
-      background: #333;
+      background: #131921;
       color: white;
-      text-align: center;
-      padding: 20px;
-      margin-top: 20px;
+      padding: 0;
     }
-    button#my-button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      display: block;
-      margin: 20px 0;
+    
+    .header-top {
+      background: #232f3e;
+      padding: 8px 0;
+      font-size: 14px;
     }
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    
+    .header-top-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+    }
+    
+    .header-top-left {
+      display: flex;
+      align-items: center;
       gap: 20px;
+    }
+    
+    .header-top-left a {
+      color: #ccc;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .header-top-left a:hover {
+      color: white;
+    }
+    
+    .header-main {
+      padding: 10px 0;
+    }
+    
+    .header-main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 20px;
+    }
+    
+    .logo {
+      color: #ff9900;
+      font-size: 28px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    
+    .search-container {
+      flex: 1;
+      display: flex;
+      max-width: 600px;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 4px 0 0 4px;
+      font-size: 16px;
+    }
+    
+    .search-button {
+      background: #febd69;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .search-button:hover {
+      background: #f3a847;
+    }
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .header-right a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+    }
+    
+    .header-right a:hover {
+      color: #ff9900;
+    }
+    
+    .cart-icon {
+      position: relative;
+      font-size: 24px;
+    }
+    
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff9900;
+      color: #131921;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    /* Navigation */
+    .nav {
+      background: #232f3e;
+      padding: 8px 0;
+    }
+    
+    .nav-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      padding: 0 20px;
+    }
+    
+    .nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .nav a:hover {
+      color: #ff9900;
+    }
+    
+    /* Hero Slider Section */
+    .hero-slider {
+      position: relative;
+      height: 400px;
+      overflow: hidden;
+    }
+    
+    .slider-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .slider-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    
+    .slide.active {
+      opacity: 1;
+    }
+    
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .slide-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+    
+    .slide-content h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .slide-content p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .hero-btn {
+      background: #ff9900;
+      color: #131921;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    
+    .hero-btn:hover {
+      background: #f3a847;
+    }
+    
+    /* Slider Navigation Buttons */
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background 0.3s;
+      z-index: 3;
+    }
+    
+    .slider-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .slider-btn.prev {
+      left: 20px;
+    }
+    
+    .slider-btn.next {
+      right: 20px;
+    }
+    
+    /* Slider Dots */
+    .slider-dots {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 3;
+    }
+    
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .dot.active {
+      background: #ff9900;
+    }
+    
+    .dot:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Main Content */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Product Grid */
+    .products-section {
+      margin: 40px 0;
+    }
+    
+    .section-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #131921;
+      border-bottom: 2px solid #ff9900;
+      padding-bottom: 10px;
+    }
+    
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .product-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    .product-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #131921;
+      line-height: 1.3;
+    }
+    
+    .product-rating {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    
+    .stars {
+      color: #ff9900;
+    }
+    
+    .rating-count {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .product-price {
+      font-size: 20px;
+      font-weight: bold;
+      color: #B12704;
+      margin-bottom: 8px;
+    }
+    
+    .original-price {
+      text-decoration: line-through;
+      color: #666;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    
+    .product-description {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+    
+    .add-to-cart-btn {
+      width: 100%;
+      background: #ffd814;
+      border: 1px solid #FCD200;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .add-to-cart-btn:hover {
+      background: #f7ca00;
+    }
+    
+    .buy-now-btn {
+      width: 100%;
+      background: #ff9900;
+      border: 1px solid #ff9900;
+      color: #131921;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    
+    .buy-now-btn:hover {
+      background: #f3a847;
+    }
+    
+    /* Categories */
+    .categories-section {
+      margin: 40px 0;
+    }
+    
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .category-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .category-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .category-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .category-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #131921;
+    }
+    
+    /* Footer */
+    .footer {
+      background: #232f3e;
+      color: white;
+      padding: 40px 0 20px;
+      margin-top: 60px;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      padding: 0 20px;
+    }
+    
+    .footer-section h3 {
+      margin-bottom: 15px;
+      color: #ff9900;
+    }
+    
+    .footer-section ul {
+      list-style: none;
+    }
+    
+    .footer-section ul li {
+      margin-bottom: 8px;
+    }
+    
+    .footer-section ul li a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    .footer-section ul li a:hover {
+      color: white;
+    }
+    
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      margin-top: 30px;
+      border-top: 1px solid #3a4553;
+      color: #ccc;
+      font-size: 14px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-main-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .search-container {
+        width: 100%;
+      }
+      
+      .nav-content {
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+    
+    /* Cart Modal */
+    .cart-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    
+    .cart-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .cart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .close-cart {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .cart-item-info h4 {
+      margin-bottom: 5px;
+      color: #131921;
+    }
+    
+    .cart-item-price {
+      color: #B12704;
+      font-weight: bold;
+    }
+    
+    .cart-total {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: right;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 2px solid #ff9900;
+    }
+    
+    .checkout-btn {
+      width: 100%;
+      background: #ff9900;
+      color: #131921;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
       margin-top: 20px;
     }
-    .grid-item {
-      background: #f9f9f9;
-      padding: 20px;
-      border: 1px solid #eee;
-      text-align: center;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-      margin-top: 10px;
-    }
-    section {
-      margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #eee;
-    }
-    ul, ol {
-      margin-left: 20px;
+    
+    .checkout-btn:hover {
+      background: #f3a847;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <header class="header">
-      <h1>Inspector Toolbar Demo Page</h1>
-      <p>This is a sample page to demonstrate the inspector toolbar with a lot of content.</p>
-    </header>
-
-    <main class="content">
-      <section>
-        <h2>Section 1: Introduction</h2>
-        <p>Welcome to this extensive demo page. The purpose of this page is to provide a rich and varied DOM structure to thoroughly test the capabilities of the inspector toolbar. You'll find different sections, various HTML elements, and enough content to require significant scrolling.</p>
-        <button id="my-button">A Button</button>
-        <div class="some-class">
-          <p>A nested paragraph inside a div. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="header-top-content">
+        <div class="header-top-left">
+          <a href="#"><span>📱</span> AmazonClone</a>
+          <a href="#"><span>📍</span> Deliver to</a>
+          <a href="#"><span>🌍</span> EN</a>
         </div>
-      </section>
-
-      <section>
-        <h2>Section 2: A Long List of Items</h2>
-        <p>Here is a long list to test scrolling within elements and the inspector's ability to handle many siblings.</p>
-        <ol>
-          <li>List item 1</li>
-          <li>List item 2</li>
-          <li>List item 3</li>
-          <li>List item 4</li>
-          <li>List item 5</li>
-          <li>List item 6</li>
-          <li>List item 7</li>
-          <li>List item 8</li>
-          <li>List item 9</li>
-          <li>List item 10</li>
-          <li>List item 11</li>
-          <li>List item 12</li>
-          <li>List item 13</li>
-          <li>List item 14</li>
-          <li>List item 15</li>
-          <li>List item 16</li>
-          <li>List item 17</li>
-          <li>List item 18</li>
-          <li>List item 19</li>
-          <li>List item 20</li>
-          <li>List item 21</li>
-          <li>List item 22</li>
-          <li>List item 23</li>
-          <li>List item 24</li>
-          <li>List item 25</li>
-        </ol>
-      </section>
-
-      <section>
-        <h2>Section 3: Placeholder Images and Text</h2>
-        <p>This section includes images and wrapping text to simulate a more complex layout.</p>
-        <article>
-          <h3>Article One</h3>
-          <img src="https://via.placeholder.com/700x150.png?text=Placeholder+Image+1" alt="Placeholder Image 1">
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
-        </article>
-        <article>
-          <h3>Article Two</h3>
-          <img src="https://via.placeholder.com/700x150.png?text=Placeholder+Image+2" alt="Placeholder Image 2">
-          <p>Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh.</p>
-        </article>
-      </section>
-
-      <section>
-        <h2>Section 4: Grid Layout</h2>
-        <p>This section uses a CSS Grid Layout to arrange items. This is useful for testing the inspector on modern layout modules.</p>
-        <div class="grid-container">
-          <div class="grid-item">Item 1</div>
-          <div class="grid-item">Item 2</div>
-          <div class="grid-item">Item 3</div>
-          <div class="grid-item">Item 4</div>
-          <div class="grid-item">Item 5</div>
-          <div class="grid-item">Item 6</div>
-          <div class="grid-item">Item 7</div>
-          <div class="grid-item">Item 8</div>
+        <div class="header-top-left">
+          <a href="#">Hello, Sign in</a>
+          <a href="#">Returns & Orders</a>
+          <a href="#">Customer Service</a>
         </div>
-      </section>
+      </div>
+    </div>
+    
+    <div class="header-main">
+      <div class="header-main-content">
+        <a href="#" class="logo">amazonclone</a>
+        
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Search">
+          <button class="search-button">🔍</button>
+        </div>
+        
+        <div class="header-right">
+          <a href="#">
+            <span>🇺🇸</span>
+            <span>Account & Lists</span>
+          </a>
+          <a href="#">
+            <span>📦</span>
+            <span>Returns & Orders</span>
+          </a>
+          <a href="#" class="cart-icon" onclick="toggleCart()">
+            🛒
+            <span class="cart-count" id="cartCount">0</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <nav class="nav">
+      <div class="nav-content">
+        <a href="#"><span>☰</span> All</a>
+        <a href="#">Today's Deals</a>
+        <a href="#">Customer Service</a>
+        <a href="#">Registry</a>
+        <a href="#">Gift Cards</a>
+        <a href="#">Sell</a>
+      </div>
+    </nav>
+  </header>
 
-      <section>
-        <h2>Section 5: More Content for Scrolling</h2>
-        <p>The following paragraphs are here simply to make the page much, much longer. This ensures that the page is several "scrolls" high, allowing for testing of fixed-position elements and scroll-dependent behaviors of the toolbar.</p>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus magna. Cras in mi at felis aliquet congue. Ut a est eget ligula molestie gravida. Curabitur massa. Donec eleifend, libero at sagittis mollis, tellus est malesuada tellus, at luctus turpis elit sit amet quam. Vivamus pretium ornare est.</p>
-        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.</p>
-        <p>Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec non enim in turpis pulvinar facilisis. Ut felis.</p>
-        <p>Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.</p>
-        <p>Phasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus. Nam nulla quam, gravida non, commodo a, sodales sit amet, nisi.</p>
-        <p>Pellentesque fermentum dolor. Aliquam quam lectus, facilisis auctor, ultrices ut, elementum vulputate, nunc.</p>
-        <p>Sed adipiscing ornare risus. Morbi est est, blandit sit amet, sagittis vel, euismod vel, velit. Pellentesque egestas sem. Suspendisse commodo ullamcorper magna.</p>
-        <p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Vestibulum id ligula porta felis euismod semper. Donec id elit non mi porta gravida at eget metus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        <p>Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Maecenas sed diam eget risus varius blandit sit amet non magna. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vestibulum id ligula porta felis euismod semper. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Aenean lacinia bibendum nulla sed consectetur.</p>
-      </section>
+  <!-- Hero Slider Section -->
+  <section class="hero-slider">
+    <div class="slider-container">
+      <div class="slider-wrapper">
+        <div class="slide active">
+          <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop" alt="Electronics Store">
+          <div class="slide-content">
+            <h2>Latest Electronics</h2>
+            <p>Discover the newest gadgets and technology</p>
+            <a href="#products" class="hero-btn">Shop Now</a>
+          </div>
+        </div>
+        <div class="slide">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=400&fit=crop" alt="Headphones">
+          <div class="slide-content">
+            <h2>Premium Audio</h2>
+            <p>Experience crystal clear sound quality</p>
+            <a href="#products" class="hero-btn">Explore Audio</a>
+          </div>
+        </div>
+        <div class="slide">
+          <img src="https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=1200&h=400&fit=crop" alt="Laptop">
+          <div class="slide-content">
+            <h2>Powerful Laptops</h2>
+            <p>Work and play with cutting-edge performance</p>
+            <a href="#products" class="hero-btn">View Laptops</a>
+          </div>
+        </div>
+        <div class="slide">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&h=400&fit=crop" alt="Smartphone">
+          <div class="slide-content">
+            <h2>Smartphones</h2>
+            <p>Stay connected with the latest mobile technology</p>
+            <a href="#products" class="hero-btn">Shop Phones</a>
+          </div>
+        </div>
+        <div class="slide">
+          <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=1200&h=400&fit=crop" alt="Gaming">
+          <div class="slide-content">
+            <h2>Gaming Gear</h2>
+            <p>Level up your gaming experience</p>
+            <a href="#products" class="hero-btn">Game On</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Slider Navigation -->
+      <button class="slider-btn prev" onclick="changeSlide(-1)">❮</button>
+      <button class="slider-btn next" onclick="changeSlide(1)">❯</button>
+      
+      <!-- Slider Dots -->
+      <div class="slider-dots">
+        <span class="dot active" onclick="currentSlide(1)"></span>
+        <span class="dot" onclick="currentSlide(2)"></span>
+        <span class="dot" onclick="currentSlide(3)"></span>
+        <span class="dot" onclick="currentSlide(4)"></span>
+        <span class="dot" onclick="currentSlide(5)"></span>
+      </div>
+    </div>
+  </section>
 
-    </main>
-  </div>
+  <!-- Main Content -->
+  <main class="main">
+    
+    <!-- Categories Section -->
+    <section class="categories-section">
+      <h2 class="section-title">Shop by Category</h2>
+      <div class="categories-grid">
+        <div class="category-card">
+          <div class="category-icon">💻</div>
+          <div class="category-title">Computers</div>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">📱</div>
+          <div class="category-title">Phones</div>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">🎧</div>
+          <div class="category-title">Audio</div>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">📺</div>
+          <div class="category-title">TV & Video</div>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">🎮</div>
+          <div class="category-title">Gaming</div>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">📚</div>
+          <div class="category-title">Books</div>
+        </div>
+      </div>
+    </section>
 
+    <!-- Products Section -->
+    <section class="products-section" id="products">
+      <h2 class="section-title">Today's Deals</h2>
+      <div class="products-grid">
+        
+        <!-- Product 1 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/3498db/ffffff?text=MacBook+Pro" alt="MacBook Pro" class="product-image">
+          <h3 class="product-title">Apple MacBook Pro 16-inch Laptop</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(2,847)</span>
+          </div>
+          <div class="product-price">
+            $2,499 <span class="original-price">$2,799</span>
+          </div>
+          <p class="product-description">Latest M2 Pro chip, 16GB RAM, 512GB SSD. Perfect for professionals and creatives.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('MacBook Pro 16-inch', 2499)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('MacBook Pro 16-inch', 2499)">Buy Now</button>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/e74c3c/ffffff?text=iPhone+15+Pro" alt="iPhone 15 Pro" class="product-image">
+          <h3 class="product-title">Apple iPhone 15 Pro Max</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(1,234)</span>
+          </div>
+          <div class="product-price">
+            $1,199 <span class="original-price">$1,399</span>
+          </div>
+          <p class="product-description">A17 Pro chip, 48MP camera, titanium design. Available in 128GB, 256GB, 512GB.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('iPhone 15 Pro Max', 1199)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('iPhone 15 Pro Max', 1199)">Buy Now</button>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/2ecc71/ffffff?text=Sony+Headphones" alt="Sony WH-1000XM5" class="product-image">
+          <h3 class="product-title">Sony WH-1000XM5 Wireless Headphones</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(3,456)</span>
+          </div>
+          <div class="product-price">
+            $349 <span class="original-price">$399</span>
+          </div>
+          <p class="product-description">Industry-leading noise cancellation, 30-hour battery life, exceptional sound quality.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('Sony WH-1000XM5', 349)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('Sony WH-1000XM5', 349)">Buy Now</button>
+        </div>
+
+        <!-- Product 4 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/f39c12/ffffff?text=PlayStation+5" alt="PlayStation 5" class="product-image">
+          <h3 class="product-title">PlayStation 5 Console</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(5,678)</span>
+          </div>
+          <div class="product-price">
+            $499 <span class="original-price">$599</span>
+          </div>
+          <p class="product-description">Next-gen gaming console with 4K graphics, ray tracing, and ultra-fast SSD.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('PlayStation 5 Console', 499)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('PlayStation 5 Console', 499)">Buy Now</button>
+        </div>
+
+        <!-- Product 5 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/9b59b6/ffffff?text=Samsung+TV" alt="Samsung TV" class="product-image">
+          <h3 class="product-title">Samsung 65" QLED 4K Smart TV</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(1,890)</span>
+          </div>
+          <div class="product-price">
+            $1,299 <span class="original-price">$1,599</span>
+          </div>
+          <p class="product-description">Quantum HDR, Alexa Built-in, 4K UHD resolution with stunning picture quality.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('Samsung 65&quot; QLED TV', 1299)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('Samsung 65&quot; QLED TV', 1299)">Buy Now</button>
+        </div>
+
+        <!-- Product 6 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/34495e/ffffff?text=Apple+Watch" alt="Apple Watch" class="product-image">
+          <h3 class="product-title">Apple Watch Series 9</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(2,345)</span>
+          </div>
+          <div class="product-price">
+            $399 <span class="original-price">$449</span>
+          </div>
+          <p class="product-description">S9 chip, health monitoring, always-on display. Available in 41mm and 45mm.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('Apple Watch Series 9', 399)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('Apple Watch Series 9', 399)">Buy Now</button>
+        </div>
+
+        <!-- Product 7 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/e67e22/ffffff?text=AirPods+Pro" alt="AirPods Pro" class="product-image">
+          <h3 class="product-title">Apple AirPods Pro (2nd Generation)</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(4,567)</span>
+          </div>
+          <div class="product-price">
+            $249 <span class="original-price">$299</span>
+          </div>
+          <p class="product-description">Active noise cancellation, spatial audio, seamless Apple ecosystem integration.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('AirPods Pro (2nd Gen)', 249)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('AirPods Pro (2nd Gen)', 249)">Buy Now</button>
+        </div>
+
+        <!-- Product 8 -->
+        <div class="product-card">
+          <img src="https://via.placeholder.com/300x200/27ae60/ffffff?text=Kindle+Paperwhite" alt="Kindle Paperwhite" class="product-image">
+          <h3 class="product-title">Kindle Paperwhite (8GB)</h3>
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="rating-count">(3,789)</span>
+          </div>
+          <div class="product-price">
+            $139 <span class="original-price">$159</span>
+          </div>
+          <p class="product-description">6.8" display, adjustable warm light, weeks of battery life, waterproof.</p>
+          <button class="add-to-cart-btn" onclick="addToCart('Kindle Paperwhite', 139)">Add to Cart</button>
+          <button class="buy-now-btn" onclick="buyNow('Kindle Paperwhite', 139)">Buy Now</button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2024</p>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Get to Know Us</h3>
+        <ul>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">About AmazonClone</a></li>
+          <li><a href="#">Investor Relations</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Make Money with Us</h3>
+        <ul>
+          <li><a href="#">Sell products</a></li>
+          <li><a href="#">Become an Affiliate</a></li>
+          <li><a href="#">Advertise Your Products</a></li>
+          <li><a href="#">Self-Publish with Us</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>AmazonClone Payment Products</h3>
+        <ul>
+          <li><a href="#">AmazonClone Business Card</a></li>
+          <li><a href="#">Shop with Points</a></li>
+          <li><a href="#">Reload Your Balance</a></li>
+          <li><a href="#">AmazonClone Currency Converter</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Let Us Help You</h3>
+        <ul>
+          <li><a href="#">AmazonClone and COVID-19</a></li>
+          <li><a href="#">Your Account</a></li>
+          <li><a href="#">Your Orders</a></li>
+          <li><a href="#">Shipping Rates & Policies</a></li>
+          <li><a href="#">Returns & Replacements</a></li>
+          <li><a href="#">Help</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>&copy; 1996-2024, AmazonClone.com, Inc. or its affiliates</p>
+    </div>
   </footer>
+
+  <!-- Shopping Cart Modal -->
+  <div class="cart-modal" id="cartModal">
+    <div class="cart-content">
+      <div class="cart-header">
+        <h2>Shopping Cart</h2>
+        <button class="close-cart" onclick="toggleCart()">×</button>
+      </div>
+      
+      <div id="cartItems">
+        <!-- Cart items will be populated here -->
+      </div>
+      
+      <div class="cart-total" id="cartTotal">
+        Total: $0.00
+      </div>
+      
+      <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+    </div>
+  </div>
 
   <script src="inspector-toolbar.js"></script>
   <script>
+    // Shopping cart functionality
+    let cart = [];
+
+    function addToCart(name, price) {
+      const existingItem = cart.find(item => item.name === name);
+      
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          name: name,
+          price: price,
+          quantity: 1
+        });
+      }
+      
+      updateCartDisplay();
+      showNotification(`${name} added to cart!`);
+    }
+
+    function buyNow(name, price) {
+      showNotification(`Proceeding to checkout for ${name} - $${price}`);
+    }
+
+    function updateCartDisplay() {
+      const cartCount = document.getElementById('cartCount');
+      const cartItems = document.getElementById('cartItems');
+      const cartTotal = document.getElementById('cartTotal');
+      
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      cartCount.textContent = totalItems;
+      
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<p>Your cart is empty</p>';
+      } else {
+        cartItems.innerHTML = cart.map(item => `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <h4>${item.name}</h4>
+              <div class="cart-item-price">$${item.price} × ${item.quantity}</div>
+            </div>
+            <button onclick="removeFromCart('${item.name}')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+          </div>
+        `).join('');
+      }
+      
+      cartTotal.textContent = `Total: $${totalPrice.toFixed(2)}`;
+    }
+
+    function removeFromCart(name) {
+      cart = cart.filter(item => item.name !== name);
+      updateCartDisplay();
+      showNotification(`${name} removed from cart`);
+    }
+
+    function toggleCart() {
+      const cartModal = document.getElementById('cartModal');
+      cartModal.style.display = cartModal.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function checkout() {
+      if (cart.length === 0) {
+        showNotification('Your cart is empty!');
+        return;
+      }
+      
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      showNotification(`Proceeding to checkout with total: $${total.toFixed(2)}`);
+      cart = [];
+      updateCartDisplay();
+      toggleCart();
+    }
+
+    function showNotification(message) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 4px;
+        z-index: 2000;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease-out;
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Close cart modal when clicking outside
+    document.getElementById('cartModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        toggleCart();
+      }
+    });
+
+    // Slider functionality
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    
+    function showSlide(index) {
+      // Hide all slides
+      slides.forEach(slide => slide.classList.remove('active'));
+      dots.forEach(dot => dot.classList.remove('active'));
+      
+      // Show current slide
+      if (slides[index]) {
+        slides[index].classList.add('active');
+        dots[index].classList.add('active');
+      }
+    }
+    
+    function changeSlide(direction) {
+      currentSlideIndex += direction;
+      
+      if (currentSlideIndex >= slides.length) {
+        currentSlideIndex = 0;
+      } else if (currentSlideIndex < 0) {
+        currentSlideIndex = slides.length - 1;
+      }
+      
+      showSlide(currentSlideIndex);
+    }
+    
+    function currentSlide(index) {
+      currentSlideIndex = index - 1;
+      showSlide(currentSlideIndex);
+    }
+    
+    // Auto-advance slides every 5 seconds
+    function autoAdvance() {
+      changeSlide(1);
+    }
+    
+    // Initialize inspector toolbar
     document.addEventListener('DOMContentLoaded', () => {
       const toolbar = new InspectorToolbar().init();
       toolbar.show();
+      
+      // Start auto-advance
+      setInterval(autoAdvance, 5000);
     });
+
+    // Add CSS animation for notifications
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 
 </body>
