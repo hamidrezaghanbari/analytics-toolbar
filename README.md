@@ -4,6 +4,10 @@ A powerful JavaScript SDK for creating interactive web analytics inspection tool
 
 ![Inspector Toolbar Demo](assets/screenshot-1.png)
 
+![Element Inspection Mode](assets/screenshot-2.png)
+
+![Custom Event Form](assets/screenshot-3.png)
+
 ## Features
 
 ### 🎯 **Interactive Element Inspection**
@@ -39,14 +43,36 @@ A powerful JavaScript SDK for creating interactive web analytics inspection tool
 
 ## Installation
 
-### NPM
+> **TODO**: This package is not yet published to npm. For now, you can build from source or use the built file directly.
+
+### NPM (Coming Soon)
 ```bash
 npm install inspector-toolbar-sdk
 ```
 
-### CDN
+### CDN (Coming Soon)
 ```html
 <script src="https://unpkg.com/inspector-toolbar-sdk@latest/dist/inspector-toolbar.js"></script>
+```
+
+### Current Installation
+Since the package is not yet published, you can:
+
+1. **Clone the repository**:
+```bash
+git clone https://github.com/your-username/inspector-toolbar.git
+cd inspector-toolbar
+```
+
+2. **Build from source**:
+```bash
+npm install
+npm run build
+```
+
+3. **Use the built file**:
+```html
+<script src="site/inspector-toolbar.js"></script>
 ```
 
 ## Quick Start
