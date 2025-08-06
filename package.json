@@ -7,13 +7,32 @@
     "build": "webpack --mode=production",
     "build:analyze": "webpack --mode=production",
     "dev": "webpack --mode=development --watch",
-    "serve": "npx serve site"
+    "serve": "npx serve site",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "toolbar",
     "sdk",
-    "javascript"
+    "javascript",
+    "inspector",
+    "web-analytics",
+    "cdn",
+    "umd"
   ],
+  "files": [
+    "site/inspector-toolbar.js",
+    "README.md"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/inspector-toolbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/inspector-toolbar/issues"
+  },
+  "homepage": "https://github.com/username/inspector-toolbar#readme",
   "devDependencies": {
     "css-loader": "^6.8.1",
     "style-loader": "^3.3.3",
