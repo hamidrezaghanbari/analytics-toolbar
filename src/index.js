@@ -168,7 +168,7 @@ class InspectorToolbar {
     const initialY = this.options.position === 'top' ? '-100%' : '100%';
     Object.assign(this.toolbar.style, {
       position: 'fixed',
-      bottom: this.options.position === 'bottom' ? '0' : '60px',
+      bottom: this.options.position === 'bottom' ? '32px' : '60px',
       left: '50%',
       height: this.options.height,
       backgroundColor: this.options.backgroundColor,
