@@ -1,6 +1,16 @@
 import './styles.css';
 
 class InspectorToolbar {
+  _getEvents() {
+    const events = this.options.events;
+
+    if (Array.isArray(events)) {
+      return events;
+    }
+
+    return [];
+  }
+
   constructor(options = {}) {
     this.options = {
       ...options
@@ -22,6 +32,7 @@ class InspectorToolbar {
     this.createToolbar();
     this.attachToPage();
     this.createInspectorElements();
+    this.showConstantEvents();
     return this;
   }
 
@@ -36,7 +47,6 @@ class InspectorToolbar {
           </div>
         </div>
         <div class="toolbar-right">
-          
           <button class="inspector-toolbar-collapse">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6,9 12,15 18,9"></polyline>
@@ -432,6 +442,56 @@ class InspectorToolbar {
     if (!this.isInspecting) return;
     this.highlighter.style.display = 'none';
     this.tooltip.style.display = 'none';
+  }
+
+  showEvent(event) {
+    if (!event || !event.cssSelector) {
+      console.error('Event with a cssSelector is required.');
+      return;
+    }
+  
+    const target = document.querySelector(event.cssSelector);
+    if (!target) {
+      console.error(`Element with selector "${event.cssSelector}" not found.`);
+      return;
+    }
+  
+    const rect = target.getBoundingClientRect();
+  
+    const highlighter = document.createElement('div');
+    highlighter.className = 'constant-event-highlighter';
+    document.body.appendChild(highlighter);
+  
+    const tooltip = document.createElement('div');
+    tooltip.className = 'constant-event-tooltip';
+    document.body.appendChild(tooltip);
+
+    highlighter.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Event clicked:', event);
+    });
+  
+    Object.assign(highlighter.style, {
+      top: `${rect.top + window.scrollY}px`,
+      left: `${rect.left + window.scrollX}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+    });
+  
+    Object.assign(tooltip.style, {
+      top: `${rect.top + window.scrollY - 10}px`,
+      left: `${rect.left + window.scrollX}px`,
+      transform: 'translateY(-100%)',
+    });
+  
+    tooltip.innerHTML = `
+      <div class="tooltip-event-name">${event.eventName || 'Event'}</div>
+    `;
+  }
+  
+  showConstantEvents() {
+    const events = this._getEvents();
+    events.forEach(event => this.showEvent(event));
   }
 
   handleClick(e) {
