@@ -32,30 +32,11 @@ class InspectorToolbar {
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
           <div class="toolbar-logo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            WebAnalytics Inspector
-          </div>
-          <div class="toolbar-divider"></div>
-          <div class="toolbar-actions">
-            <button class="toolbar-button create-event-button" id="create-event-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Create Event
-            </button>
+            Event Builder
           </div>
         </div>
         <div class="toolbar-right">
-          <button class="toolbar-button hide-toolbar-button" id="hide-toolbar-btn" title="Hide Toolbar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18"></path>
-              <path d="m6 6 12 12"></path>
-            </svg>
-          </button>
+          
           <button class="inspector-toolbar-collapse">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6,9 12,15 18,9"></polyline>
@@ -68,13 +49,6 @@ class InspectorToolbar {
           <div class="stepper-container">
             <div class="stepper-header">
               <div class="stepper-title">Event Builder</div>
-              <div class="stepper-controls">
-                <button type="button" class="stepper-collapse-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18,15 12,9 6,15"></polyline>
-                  </svg>
-                </button>
-              </div>
             </div>
             
             <div class="stepper-progress">
@@ -110,41 +84,43 @@ class InspectorToolbar {
                   <input type="text" id="event-name" name="eventName" placeholder="Add to cart" required>
                 </div>
                 
-                <div class="form-group-row">
-                  <label for="event-category">Event Category</label>
-                  <select id="event-category" name="category" required>
-                    <option value="e-commerce">E-Commerce</option>
-                    <option value="engagement">Engagement</option>
-                    <option value="analytics">Analytics</option>
-                  </select>
+                <div class="form-group-row-split">
+                  <div class="form-group-half">
+                    <label for="event-category">Event Category</label>
+                    <select id="event-category" name="category" required>
+                      <option value="e-commerce">E-Commerce</option>
+                      <option value="engagement">Engagement</option>
+                      <option value="analytics">Analytics</option>
+                    </select>
+                  </div>
+                  <div class="form-group-half">
+                    <label for="event-type">Event</label>
+                    <select id="event-type" name="eventType" required>
+                      <option value="DA_ADD_ITEM_TO_CART">DA_ADD_ITEM_TO_CART</option>
+                      <option value="click">Click</option>
+                      <option value="scroll">Scroll</option>
+                      <option value="submit">Submit</option>
+                    </select>
+                  </div>
                 </div>
                 
-                <div class="form-group-row">
-                  <label for="event-type">Event</label>
-                  <select id="event-type" name="eventType" required>
-                    <option value="DA_ADD_ITEM_TO_CART">DA_ADD_ITEM_TO_CART</option>
-                    <option value="click">Click</option>
-                    <option value="scroll">Scroll</option>
-                    <option value="submit">Submit</option>
-                  </select>
-                </div>
-                
-                <div class="form-group-row">
-                  <label for="event-trigger">Event Trigger</label>
-                  <select id="event-trigger" name="eventTrigger" required>
-                    <option value="click">Click</option>
-                    <option value="scroll">Scroll</option>
-                    <option value="hover">Hover</option>
-                  </select>
-                </div>
-                
-                <div class="form-group-row">
-                  <label for="count-type">Count Type</label>
-                  <select id="count-type" name="countType" required>
-                    <option value="per_event">Per event</option>
-                    <option value="once">Once</option>
-                    <option value="every_time">Every Time</option>
-                  </select>
+                <div class="form-group-row-split">
+                  <div class="form-group-half">
+                    <label for="event-trigger">Event Trigger</label>
+                    <select id="event-trigger" name="eventTrigger" required>
+                      <option value="click">Click</option>
+                      <option value="scroll">Scroll</option>
+                      <option value="hover">Hover</option>
+                    </select>
+                  </div>
+                  <div class="form-group-half">
+                    <label for="count-type">Count Type</label>
+                    <select id="count-type" name="countType" required>
+                      <option value="per_event">Per event</option>
+                      <option value="once">Once</option>
+                      <option value="every_time">Every Time</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               
@@ -308,11 +284,11 @@ class InspectorToolbar {
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     collapseBtn.addEventListener('click', () => this.toggleCollapse());
 
-    const hideBtn = this.toolbar.querySelector('#hide-toolbar-btn');
-    hideBtn.addEventListener('click', () => this.hide());
+    // const hideBtn = this.toolbar.querySelector('#hide-toolbar-btn');
+    // hideBtn.addEventListener('click', () => this.hide());
 
-    const createEventBtn = this.toolbar.querySelector('#create-event-btn');
-    createEventBtn.addEventListener('click', () => this.toggleEventForm());
+    // const createEventBtn = this.toolbar.querySelector('#create-event-btn');
+    // createEventBtn.addEventListener('click', () => this.toggleEventForm());
 
     const addPathBtn = this.toolbar.querySelector('#add-path-btn');
     if (addPathBtn) {
