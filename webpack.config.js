@@ -19,12 +19,12 @@ module.exports = {
       }
     ]
   },
-  plugins: [
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      openAnalyzer: false,
-    })
-  ],
+  // plugins: [
+  //   new BundleAnalyzerPlugin({
+  //     analyzerMode: 'static',
+  //     openAnalyzer: false,
+  //   })
+  // ],
   resolve: {
     extensions: ['.js']
   }

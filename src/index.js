@@ -96,7 +96,7 @@ class InspectorToolbar {
                 
                 <div class="form-group-row-split">
                   <div class="form-group-half">
-                    <label for="event-category">Event Category</label>
+                    <label for="event-category">Custom Category</label>
                     <select id="event-category" name="category" required>
                       <option value="e-commerce">E-Commerce</option>
                       <option value="engagement">Engagement</option>
@@ -104,7 +104,7 @@ class InspectorToolbar {
                     </select>
                   </div>
                   <div class="form-group-half">
-                    <label for="event-type">Event</label>
+                    <label for="event-type">Product Type</label>
                     <select id="event-type" name="eventType" required>
                       <option value="DA_ADD_ITEM_TO_CART">DA_ADD_ITEM_TO_CART</option>
                       <option value="click">Click</option>
@@ -168,7 +168,6 @@ class InspectorToolbar {
                             <option value="contains">Contains</option>
                             <option value="startsWith">Starts with</option>
                             <option value="endsWith">Ends with</option>
-                            <option value="regex">Regex</option>
                           </select>
                         </div>
                         <input type="text" name="patternValue[]" class="pattern-value" placeholder="Value">
@@ -194,7 +193,7 @@ class InspectorToolbar {
                   <div class="attribute-block" data-attribute-id="1">
                     <div class="attribute-header">
                       <h3 class="attribute-title">Attribute 1 (Optional)</h3>
-                      <button type="button" class="remove-attribute-btn" title="Remove Attribute">
+                      <button type="button" class="selector-inspect-btn toolbar-button icon-button" title="Remove Attribute">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -242,7 +241,6 @@ class InspectorToolbar {
             </div>
             
             <div class="form-actions">
-              <button type="button" id="cancel-btn" class="secondary-btn">Cancel</button>
               <button type="button" id="prev-step-btn" class="secondary-btn" disabled>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
@@ -315,11 +313,9 @@ class InspectorToolbar {
     // Stepper navigation
     const nextStepBtn = this.toolbar.querySelector('#next-step-btn');
     const prevStepBtn = this.toolbar.querySelector('#prev-step-btn');
-    const cancelBtn = this.toolbar.querySelector('#cancel-btn');
     
     nextStepBtn.addEventListener('click', () => this.nextStep());
     prevStepBtn.addEventListener('click', () => this.prevStep());
-    cancelBtn.addEventListener('click', () => this.closeEventForm());
     
     // Type selector buttons
     const typeOptions = this.toolbar.querySelectorAll('.type-option');
@@ -696,7 +692,6 @@ class InspectorToolbar {
               <option value="contains">Contains</option>
               <option value="startsWith">Starts with</option>
               <option value="endsWith">Ends with</option>
-              <option value="regex">Regex</option>
             </select>
           </div>
           <input type="text" name="patternValue[]" class="pattern-value" placeholder="Value">
@@ -760,12 +755,14 @@ class InspectorToolbar {
     
     if (stepNumber === this.totalSteps) {
       nextStepBtn.innerHTML = `
+        <span id="submit-btn">
         Save & Done
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <polyline points="17,21 17,13 7,13 7,21"></polyline>
           <polyline points="7,3 7,8 15,8"></polyline>
         </svg>
+        </span>
       `;
     } else {
       nextStepBtn.innerHTML = `
@@ -897,13 +894,13 @@ class InspectorToolbar {
   }
 
   showLoadingState() {
-    const submitBtn = this.toolbar.querySelector('#custom-event-form button[type="submit"]');
+    const submitBtn = this.toolbar.querySelector('#submit-btn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Creating Event...';
   }
 
   hideLoadingState() {
-    const submitBtn = this.toolbar.querySelector('#custom-event-form button[type="submit"]');
+    const submitBtn = this.toolbar.querySelector('#submit-btn');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Create Event';
   }
@@ -922,13 +919,46 @@ class InspectorToolbar {
   }
 
   async callApi(data) {
+    console.log(data);
+
+    const pageUrl = data?.selectors?.map(selector => {
+      return {
+        "operator": selector?.pattern?.operator,
+        "url": selector?.pattern?.value
+      }
+    }) || []
+
+    const payload = {
+      "name": data?.eventName,
+      "type": "event",
+      "custom_category":data?.category,
+      "event_type": data?.eventType,
+      "count_method": data?.countType,
+      "product_type": data?.productType,
+      "page_url": pageUrl,
+      "selector": {
+        "type": "css_selector",
+        "value": data?.selectors?.map(selector => selector?.elementSelector).join(', ')
+      },
+      // TODO fill attributes
+      "attributes": {
+        "brand": {
+          "type": "element_text",
+          "value": "Apple"
+        }
+      }
+    }
+
+    // http://87.247.186.146:8001/api/v1/users/4b1e9329-a28f-4cbd-8adc-9a6147c41026/goals/site/domain/adtrace2.io
+
     try {
+      // TODO url change
       const response = await fetch('/someapimock', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
