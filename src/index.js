@@ -12,9 +12,7 @@ class InspectorToolbar {
   }
 
   constructor(options = {}) {
-    this.options = {
-      ...options
-    };
+    this.options = {...(options || {})};
     
     this.toolbar = null;
     this.isVisible = false;
@@ -26,6 +24,7 @@ class InspectorToolbar {
     this.selectorCount = 1;
     this.attributeCount = 1;
     this.completedSteps = [];
+    this.categoriesData = null;
   }
 
   init() {
@@ -33,6 +32,7 @@ class InspectorToolbar {
     this.attachToPage();
     this.createInspectorElements();
     this.showConstantEvents();
+    this.fetchCategories();
     return this;
   }
 
@@ -98,18 +98,13 @@ class InspectorToolbar {
                   <div class="form-group-half">
                     <label for="event-category">Custom Category</label>
                     <select id="event-category" name="category" required>
-                      <option value="e-commerce">E-Commerce</option>
-                      <option value="engagement">Engagement</option>
-                      <option value="analytics">Analytics</option>
+                      <option value="">Loading...</option>
                     </select>
                   </div>
                   <div class="form-group-half">
                     <label for="event-type">Product Type</label>
                     <select id="event-type" name="eventType" required>
-                      <option value="DA_ADD_ITEM_TO_CART">DA_ADD_ITEM_TO_CART</option>
-                      <option value="click">Click</option>
-                      <option value="scroll">Scroll</option>
-                      <option value="submit">Submit</option>
+                      <option value="">Please select a category</option>
                     </select>
                   </div>
                 </div>
@@ -373,6 +368,9 @@ class InspectorToolbar {
     this.boundHandleMouseOver = this.handleMouseOver.bind(this);
     this.boundHandleMouseOut = this.handleMouseOut.bind(this);
     this.boundHandleClick = this.handleClick.bind(this);
+
+    const categorySelect = this.toolbar.querySelector('#event-category');
+    categorySelect.addEventListener('change', (e) => this.updateProductTypes(e.target.value));
   }
 
   attachToPage() {
@@ -1090,6 +1088,55 @@ class InspectorToolbar {
     this.isVisible = false;
     if (this.isInspecting) {
         this.stopInspecting();
+    }
+  }
+
+  async fetchCategories() {
+    const site_uuid = this.options.site_uuid;
+    // TODO reform this site_uuid to be removed
+    const url = `https://loadtest.adtrace.ir/api/v1/users/${site_uuid}/goals/categories/structure`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      this.categoriesData = await response.json();
+      this.populateCategories();
+    } catch (error) {
+      console.error("Could not fetch categories:", error);
+      const categorySelect = this.toolbar.querySelector('#event-category');
+      categorySelect.innerHTML = '<option value="">Error loading</option>';
+    }
+  }
+
+  populateCategories() {
+    const categorySelect = this.toolbar.querySelector('#event-category');
+    if (!this.categoriesData) return;
+
+    categorySelect.innerHTML = '<option value="">Select a category</option>';
+    for (const category in this.categoriesData) {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+      categorySelect.appendChild(option);
+    }
+  }
+
+  updateProductTypes(selectedCategory) {
+    const productTypeSelect = this.toolbar.querySelector('#event-type');
+    productTypeSelect.innerHTML = '';
+
+    if (selectedCategory && this.categoriesData && this.categoriesData[selectedCategory]) {
+      const productTypes = this.categoriesData[selectedCategory];
+      productTypeSelect.innerHTML = '<option value="">Select a product type</option>';
+      for (const productType in productTypes) {
+        const option = document.createElement('option');
+        option.value = productType;
+        option.textContent = productType.charAt(0).toUpperCase() + productType.slice(1);
+        productTypeSelect.appendChild(option);
+      }
+    } else {
+      productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
     }
   }
 }
