@@ -249,7 +249,7 @@
 
 .custom-event-form-container {
   background: #ffffff;
-  padding: 20px;
+  padding: 16px 8px;
   padding-bottom: 0;
   border-top: 1.5px solid #e5e7eb;
   border-radius: 0 0 10px 10px;
@@ -761,7 +761,6 @@
   justify-content: center;
   font-size: 14px;
   font-weight: 500;
-  margin: 8px 0;
   transition: all 0.2s ease;
   cursor: pointer;
   height: auto;
@@ -797,7 +796,8 @@
   justify-content: flex-end;
   gap: 12px;
   /* margin-top: 20px; */
-  padding: 20px 0 12px 0;
+  padding-top: 12px;
+  padding-bottom: 8px;
   border-top: 1.5px solid #e5e7eb;
   border-radius: 0 0 10px 10px;
   margin-left: -20px;
