@@ -326,16 +326,17 @@ class InspectorToolbar {
     const form = this.toolbar.querySelector('#custom-event-form');
     form.addEventListener('submit', (e) => this.handleFormSubmit(e));
     
-    // Add real-time validation
+    // Clear errors when user starts typing
     form.addEventListener('input', (e) => {
-      if (e.target.hasAttribute('required')) {
-        this.validateField(e.target);
+      if (e.target.classList.contains('error')) {
+        this.clearFieldError(e.target);
       }
     });
     
-    form.addEventListener('blur', (e) => {
-      if (e.target.hasAttribute('required')) {
-        this.validateField(e.target);
+    // Also clear errors on change for select elements
+    form.addEventListener('change', (e) => {
+      if (e.target.tagName === 'SELECT' && e.target.classList.contains('error')) {
+        this.clearFieldError(e.target);
       }
     });
     
@@ -844,11 +845,18 @@ class InspectorToolbar {
     
     if (step === 1) {
       // Validate Event Info fields
-      const requiredFields = ['eventName', 'category', 'eventType', 'eventTrigger', 'countType'];
-      requiredFields.forEach(fieldName => {
+      const validationRules = {
+        eventName: 'Event name is required',
+        category: 'Category is required',
+        eventType: 'Event type is required', 
+        eventTrigger: 'Event trigger is required',
+        countType: 'Count type is required'
+      };
+      
+      Object.entries(validationRules).forEach(([fieldName, errorMessage]) => {
         const field = stepContent.querySelector(`[name="${fieldName}"]`);
         if (!field.value.trim()) {
-          field.classList.add('error');
+          this.showFieldError(field, errorMessage);
           hasErrors = true;
         }
       });
@@ -861,13 +869,15 @@ class InspectorToolbar {
         if (selectorInput.value.trim()) {
           hasValidSelector = true;
           selectorInput.classList.remove('error');
-        } else {
-          selectorInput.classList.add('error');
         }
       }
       
       if (!hasValidSelector) {
         hasErrors = true;
+        // Mark first selector as error
+        if (selectorInputs.length > 0) {
+          this.showFieldError(selectorInputs[0], 'At least one element selector is required');
+        }
       }
     } else if (step === 3) {
       // Validate attributes - attributes are optional, so no validation errors
@@ -880,6 +890,40 @@ class InspectorToolbar {
     }
     
     return !hasErrors;
+  }
+  
+  showFieldError(field, message) {
+    field.classList.add('error');
+    
+    // For element selector inputs, place error below the input-with-icon container
+    let errorContainer = field.parentElement;
+    if (field.name === 'elementSelector[]' && field.parentElement.classList.contains('input-with-icon')) {
+      errorContainer = field.parentElement.parentElement; // Use the form-group-row
+    }
+    
+    // Check if error message already exists
+    let errorElement = errorContainer.querySelector('.field-error-message');
+    if (!errorElement) {
+      errorElement = document.createElement('div');
+      errorElement.className = 'field-error-message';
+      errorContainer.appendChild(errorElement);
+    }
+    errorElement.textContent = message;
+  }
+  
+  clearFieldError(field) {
+    field.classList.remove('error');
+    
+    // For element selector inputs, look for error in the form-group-row
+    let errorContainer = field.parentElement;
+    if (field.name === 'elementSelector[]' && field.parentElement.classList.contains('input-with-icon')) {
+      errorContainer = field.parentElement.parentElement;
+    }
+    
+    const errorElement = errorContainer.querySelector('.field-error-message');
+    if (errorElement) {
+      errorElement.remove();
+    }
   }
   
   closeEventForm() {
@@ -1033,6 +1077,16 @@ class InspectorToolbar {
     const form = this.toolbar.querySelector('#custom-event-form');
     form.querySelectorAll('.error').forEach(field => {
       field.classList.remove('error');
+    });
+    
+    // Remove all field error messages
+    form.querySelectorAll('.field-error-message').forEach(errorMsg => {
+      errorMsg.remove();
+    });
+    
+    // Remove all step error containers
+    form.querySelectorAll('.step-error-container').forEach(errorContainer => {
+      errorContainer.remove();
     });
   }
 

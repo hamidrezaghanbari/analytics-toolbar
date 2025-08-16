@@ -535,6 +535,29 @@
   background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
 }
 
+.field-error-message {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: slideDown 0.2s ease-out;
+}
+
+
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .required-badge {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
