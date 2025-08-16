@@ -498,9 +498,8 @@
 }
 
 .type-option.active {
-  background: #2563eb;
-  color: white;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  background: #B3D5F7;
+  color: #004589;
 }
 
 #custom-event-form input,
@@ -604,23 +603,26 @@
 
 .remove-selector-btn,
 .remove-attribute-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: transparent;
+  border: 1px solid #e5e7eb;
+  background: white;
   color: #9ca3af;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .remove-selector-btn:hover,
 .remove-attribute-btn:hover {
-  background-color: rgba(239, 68, 68, 0.05);
-  color: #dc2626;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
+  transform: scale(1.1);
 }
 
 .attribute-fields {
