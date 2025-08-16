@@ -136,7 +136,7 @@ class InspectorToolbar {
                   <div class="selector-block" data-selector-id="1">
                     <div class="selector-header">
                       <h3 class="selector-title">Selector 1</h3>
-                      <button type="button" class="remove-selector-btn" title="Remove Selector">
+                      <button type="button" class="remove-selector-btn remove-selector-btn-hide" title="Remove Selector">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -158,14 +158,14 @@ class InspectorToolbar {
                       <label>Page Pattern (Optional)</label>
                       <div class="page-pattern-container">
                         <div class="pattern-operator">
-                          <select name="patternOperator[]" class="pattern-operator-select">
+                          <select name="patternOperator[]" class="pattern-operator-select border-none">
                             <option value="equals">Equals</option>
                             <option value="contains">Contains</option>
                             <option value="startsWith">Starts with</option>
                             <option value="endsWith">Ends with</option>
                           </select>
                         </div>
-                        <input type="text" name="patternValue[]" class="pattern-value" placeholder="Value">
+                        <input type="text" name="patternValue[]" class="pattern-value border-none" placeholder="Value">
                       </div>
                     </div>
                   </div>
@@ -176,7 +176,7 @@ class InspectorToolbar {
                       <line x1="12" y1="5" x2="12" y2="19"></line>
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Add Another Selector
+                    Add New
                   </button>
                 </div>
               </div>
@@ -188,7 +188,7 @@ class InspectorToolbar {
                   <div class="attribute-block" data-attribute-id="1">
                     <div class="attribute-header">
                       <h3 class="attribute-title">Attribute 1 (Optional)</h3>
-                      <button type="button" class="selector-inspect-btn toolbar-button icon-button" title="Remove Attribute">
+                      <button type="button" class="remove-attribute-btn remove-attribute-btn-hide" title="Remove Attribute">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -236,7 +236,7 @@ class InspectorToolbar {
             </div>
             
             <div class="form-actions">
-              <button type="button" id="prev-step-btn" class="secondary-btn" disabled>
+              <button type="button" id="prev-step-btn" class="secondary-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -311,6 +311,8 @@ class InspectorToolbar {
     
     nextStepBtn.addEventListener('click', () => this.nextStep());
     prevStepBtn.addEventListener('click', () => this.prevStep());
+
+    this.goToStep(1);
     
     // Type selector buttons
     const typeOptions = this.toolbar.querySelectorAll('.type-option');
@@ -598,6 +600,7 @@ class InspectorToolbar {
     
     // Insert before the add button
     attributesContainer.insertBefore(newAttribute, addButton);
+    this.updateRemoveAttributeButtons();
   }
 
   removeAttribute(attributeBlock) {
@@ -616,6 +619,7 @@ class InspectorToolbar {
     });
     
     this.attributeCount = remainingAttributes.length;
+    this.updateRemoveAttributeButtons();
   }
   
   markStepCompleted(stepNumber) {
@@ -685,20 +689,22 @@ class InspectorToolbar {
         <label>Page Pattern (Optional)</label>
         <div class="page-pattern-container">
           <div class="pattern-operator">
-            <select name="patternOperator[]" class="pattern-operator-select">
+            <select name="patternOperator[]" class="pattern-operator-select border-none">
               <option value="equals">Equals</option>
               <option value="contains">Contains</option>
               <option value="startsWith">Starts with</option>
               <option value="endsWith">Ends with</option>
             </select>
           </div>
-          <input type="text" name="patternValue[]" class="pattern-value" placeholder="Value">
+          <input type="text" name="patternValue[]" class="pattern-value border-none" placeholder="Value">
         </div>
       </div>
     `;
     
     // Insert before the add button
     selectorsContainer.insertBefore(newSelector, addButton);
+
+    this.updateRemoveSelectorButtons();
   }
   
   removeSelector(selectorBlock) {
@@ -717,8 +723,34 @@ class InspectorToolbar {
     });
     
     this.selectorCount = remainingSelectors.length;
+    
+    this.updateRemoveSelectorButtons();
   }
 
+  updateRemoveSelectorButtons() {
+    const selectors = this.toolbar.querySelectorAll('.selector-block');
+    selectors.forEach((selector, index) => {
+      const removeBtn = selector.querySelector('.remove-selector-btn');
+      if (selectors.length > 1) {
+        removeBtn.classList.remove('remove-selector-btn-hide');
+      } else {
+        removeBtn.classList.add('remove-selector-btn-hide');
+      }
+    });
+  }
+
+  updateRemoveAttributeButtons() {
+    const attributes = this.toolbar.querySelectorAll('.attribute-block');
+    attributes.forEach((attribute, index) => {
+      const removeBtn = attribute.querySelector('.remove-attribute-btn');
+      if (attributes.length > 1) {
+        removeBtn.classList.remove('remove-attribute-btn-hide');
+      } else {
+        removeBtn.classList.add('remove-attribute-btn-hide');
+      }
+    });
+  }
+ 
   nextStep() {
     if (this.currentStep < this.totalSteps) {
       // Validate current step
@@ -737,7 +769,10 @@ class InspectorToolbar {
   }
   
   prevStep() {
-    if (this.currentStep > 1) {
+    if (this.currentStep === 1) {
+      // On step 1, Cancel button collapses the toolbar
+      this.toggleCollapse();
+    } else if (this.currentStep > 1) {
       this.goToStep(this.currentStep - 1);
     }
   }
@@ -749,27 +784,45 @@ class InspectorToolbar {
     const prevStepBtn = this.toolbar.querySelector('#prev-step-btn');
     const nextStepBtn = this.toolbar.querySelector('#next-step-btn');
     
-    prevStepBtn.disabled = stepNumber === 1;
+    // Don't disable on step 1 since it acts as Cancel button
+    prevStepBtn.disabled = false;
     
-    if (stepNumber === this.totalSteps) {
-      nextStepBtn.innerHTML = `
-        <span id="submit-btn">
-        Save & Done
+    if (stepNumber === 1) {
+      prevStepBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17,21 17,13 7,13 7,21"></polyline>
-          <polyline points="7,3 7,8 15,8"></polyline>
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
-        </span>
+        Cancel
       `;
     } else {
-      nextStepBtn.innerHTML = `
-        Next
+      prevStepBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"></polyline>
+          <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
+        Previous
       `;
     }
+
+     if (stepNumber === this.totalSteps) {
+       nextStepBtn.innerHTML = `
+         <span id="submit-btn">
+         Save & Done
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+           <polyline points="17,21 17,13 7,13 7,21"></polyline>
+           <polyline points="7,3 7,8 15,8"></polyline>
+         </svg>
+         </span>
+       `;
+     } else {
+       nextStepBtn.innerHTML = `
+         Next
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <polyline points="9 18 15 12 9 6"></polyline>
+         </svg>
+       `;
+     }
     
     // Update active step in UI
     const steps = this.toolbar.querySelectorAll('.stepper-step');
@@ -1096,11 +1149,28 @@ class InspectorToolbar {
     // TODO reform this site_uuid to be removed
     const url = `https://loadtest.adtrace.ir/api/v1/users/${site_uuid}/goals/categories/structure`;
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      this.categoriesData = await response.json();
+      // const response = await fetch(url);
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
+      // this.categoriesData = await response.json();
+      this.categoriesData = [
+        {
+          "category": "Product 1",
+          "product_types": ["Product 1", "Product Group 1"]
+        },
+        
+        {
+          "category": "Product 2",
+          "product_types": ["Product 2", "Product Group 2"]
+        },
+        
+        {
+          "category": "Product 3",
+          "product_types": ["Product 3", "Product Group 3"]
+        },
+        
+      ]
       this.populateCategories();
     } catch (error) {
       console.error("Could not fetch categories:", error);
