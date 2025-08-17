@@ -1,6 +1,6 @@
 {
   "name": "inspector-toolbar-sdk",
-  "version": "1.0.11",
+  "version": "1.0.20",
   "description": "JavaScript SDK for sticky toolbar",
   "main": "site/inspector-toolbar.js",
   "scripts": {

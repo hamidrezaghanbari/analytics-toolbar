@@ -115,17 +115,18 @@ class InspectorToolbar {
                   <div class="form-group-half">
                     <label for="event-trigger">Event Trigger</label>
                     <select id="event-trigger" name="eventTrigger" required>
-                      <option value="click">Click</option>
-                      <option value="scroll">Scroll</option>
-                      <option value="hover">Hover</option>
+                      <option value="element_click"> Click</option>
+                      <option value="page_view">Page View</option>
+                      <option value="element_submit"> Submit</option>
+                      <option value="visibility_change">Visible on screen</option>
                     </select>
                   </div>
                   <div class="form-group-half">
                     <label for="count-type">Count Type</label>
                     <select id="count-type" name="countType" required>
-                      <option value="per_event">Per event</option>
-                      <option value="once">Once</option>
-                      <option value="every_time">Every Time</option>
+                      <option value="per_event">Per Event</option>
+                      <option value="once_per_session">Once per session</option>
+                      <option value="once_per_page">Once per page</option>
                     </select>
                   </div>
                 </div>
@@ -163,8 +164,8 @@ class InspectorToolbar {
                           <select name="patternOperator[]" class="pattern-operator-select border-none">
                             <option value="equals">Equals</option>
                             <option value="contains">Contains</option>
-                            <option value="startsWith">Starts with</option>
-                            <option value="endsWith">Ends with</option>
+                            <option value="starts_with">Starts with</option>
+                            <option value="ends_with">Ends with</option>
                           </select>
                         </div>
                         <input type="text" name="patternValue[]" class="pattern-value border-none" placeholder="Value">
@@ -968,6 +969,8 @@ class InspectorToolbar {
       countType: formData.get('countType'),
       selectors: []
     };
+
+    
     
     // Get selectors data
     const elementSelectors = formData.getAll('elementSelector[]');
@@ -999,7 +1002,6 @@ class InspectorToolbar {
     }
     
     this.showLoadingState();
-    console.log('here fuck')
     this.callApi(data);
   }
 
@@ -1030,9 +1032,49 @@ class InspectorToolbar {
 
   async callApi(data) {
     const urlParams = new URLSearchParams(window.location.search);
-    const apiUrl = urlParams.get('api_url');
+    let apiUrl;
+    if (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    ) {
+      apiUrl = 'http://87.247.186.146:8001/api/v1/';
+    } else {
+      apiUrl = urlParams.get('api_url');
+    }
+    const token = urlParams.get('token');
 
-    console.log(apiUrl, 'apiUrl')
+    const selector = (data?.selectors?.map(selector => selector?.elementSelector) || [])?.join(', ')
+
+    let attributes = {}
+
+    data?.attributes?.forEach(attribute => {
+      attributes[attribute?.name] = {
+        type: 'css_selector',
+        value: attribute?.value,
+        value_type: this.categoriesData?.[data?.category]?.[data?.eventType]?.[attribute?.name]?.value_type || 'varchar'
+       }
+    })
+
+    const payload = {
+      attributes,
+      "count_method": data?.countType,
+      "custom_category": data?.category,
+      "domain": window.location.hostname,
+      "event_type": data?.eventTrigger,
+      "name": data?.eventName,
+      "product_type": data?.eventType,
+      "type": "event",
+      page_url: data?.selectors?.map(selector => {
+        return {
+          "operator": selector?.pattern?.operator,
+          "url": selector?.pattern?.value
+        }
+      }) || [],
+      "selector": {
+        "type": "css_selector",
+        "value": selector,
+      },
+    }  
 
     if (!apiUrl) {
       console.log('No api_url found in search params, skipping API call.');
@@ -1040,53 +1082,24 @@ class InspectorToolbar {
       this.showMessage('API URL not provided.', 'error');
       return;
     }
-    console.log(data);
-
-    const pageUrl = data?.selectors?.map(selector => {
-      return {
-        "operator": selector?.pattern?.operator,
-        "url": selector?.pattern?.value
-      }
-    }) || []
-
-    const payload = {
-      "name": data?.eventName,
-      "type": "event",
-      "custom_category":data?.category,
-      "event_type": data?.eventType,
-      "count_method": data?.countType,
-      "product_type": data?.productType,
-      "page_url": pageUrl,
-      "selector": {
-        "type": "css_selector",
-        "value": data?.selectors?.map(selector => selector?.elementSelector).join(', ')
-      },
-      // TODO fill attributes
-      "attributes": {
-        "brand": {
-          "type": "element_text",
-          "value": "Apple"
-        }
-      }
-    }
-
-    // http://87.247.186.146:8001/api/v1/users/4b1e9329-a28f-4cbd-8adc-9a6147c41026/goals/site/domain/adtrace2.io
-
+    
     try {
-      const getStructureApiUrl = apiUrl + `/analytics/categories/structure`
-      // TODO url change
-      const response = await fetch(getStructureApiUrl, {
-        method: 'GET',
-        body: JSON.stringify(payload)
+      const createEventUrl = apiUrl + `goals/site/domain/${window.location.hostname}`
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(createEventUrl, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: headers
       });
 
       if (!response.ok) {
+        console.log('error on creating event', response)
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
 
-      console.log(result, apiUrl, getStructureApiUrl, 'fuck here')
+      console.log(result, apiUrl, getStructureApiUrl, 'result here')
 
 
       this.hideLoadingState();
@@ -1231,14 +1244,20 @@ class InspectorToolbar {
   }
 
   async fetchCategories() {
-    console.log('fuck here 11')
     const urlParams = new URLSearchParams(window?.location?.search||'');
-    // const apiUrl = urlParams.get('api_url');
-    const apiUrl = 'http://87.247.186.146:8001/api/v1/'
+    let apiUrl;
+    if (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    ) {
+      apiUrl = 'http://87.247.186.146:8001/api/v1/';
+    } else {
+      apiUrl = urlParams.get('api_url');
+    }
     const token = urlParams.get('token');
 
-    // TODO reform this site_uuid to be removed
     const url = `${apiUrl}analytics/categories/structure`
+
     try {
 
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -1246,7 +1265,7 @@ class InspectorToolbar {
 
       const result = await response.json();
 
-      console.log(result, 'fuck respone')
+      console.log(result, 'respone')
 
       const categoriesData = Object.entries(result).map(([key, value]) => {
         const productTypes = Object.keys(value || {}) || []
@@ -1273,7 +1292,7 @@ class InspectorToolbar {
 
   populateCategories() {
     const categorySelect = this.toolbar.querySelector('#event-category');
-    console.log(this.categoriesData, 'fuck categories')
+    console.log(this.categoriesData, 'categories')
     if (!this.categoriesData) return;
 
     categorySelect.innerHTML = '<option value="">Select a category</option>';
