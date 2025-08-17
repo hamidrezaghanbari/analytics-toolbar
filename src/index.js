@@ -25,6 +25,7 @@ class InspectorToolbar {
     this.attributeCount = 1;
     this.completedSteps = [];
     this.categoriesData = null;
+    this.collapsed = true;
   }
 
   init() {
@@ -38,7 +39,7 @@ class InspectorToolbar {
 
   createToolbar() {
     this.toolbar = document.createElement('div');
-    this.toolbar.className = 'inspector-toolbar';
+    this.toolbar.className = 'inspector-toolbar collapsed';
     this.toolbar.innerHTML = `
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
@@ -102,7 +103,7 @@ class InspectorToolbar {
                     </select>
                   </div>
                   <div class="form-group-half">
-                    <label for="event-type">Product Type</label>
+                    <label for="event-type">Event</label>
                     <select id="event-type" name="eventType" required>
                       <option value="">Please select a category</option>
                     </select>
@@ -272,14 +273,12 @@ class InspectorToolbar {
     const initialY = this.options.position === 'top' ? '-100%' : '100%';
     Object.assign(this.toolbar.style, {
       position: 'fixed',
-      bottom: this.options.position === 'bottom' ? '32px' : '60px',
       left: '50%',
       height: this.options.height,
       backgroundColor: this.options.backgroundColor,
       color: this.options.textColor,
       zIndex: '9999',
       transform: `translateX(-50%) translateY(${initialY})`,
-      transition: 'transform 0.3s ease'
     });
   }
 
@@ -985,6 +984,7 @@ class InspectorToolbar {
     }
     
     this.showLoadingState();
+    console.log('here fuck')
     this.callApi(data);
   }
 
@@ -1014,6 +1014,17 @@ class InspectorToolbar {
   }
 
   async callApi(data) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiUrl = urlParams.get('api_url');
+
+    console.log(apiUrl, 'apiUrl')
+
+    if (!apiUrl) {
+      console.log('No api_url found in search params, skipping API call.');
+      this.hideLoadingState();
+      this.showMessage('API URL not provided.', 'error');
+      return;
+    }
     console.log(data);
 
     const pageUrl = data?.selectors?.map(selector => {
@@ -1047,12 +1058,10 @@ class InspectorToolbar {
     // http://87.247.186.146:8001/api/v1/users/4b1e9329-a28f-4cbd-8adc-9a6147c41026/goals/site/domain/adtrace2.io
 
     try {
+      const getStructureApiUrl = apiUrl + `/analytics/categories/structure`
       // TODO url change
-      const response = await fetch('/someapimock', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(getStructureApiUrl, {
+        method: 'GET',
         body: JSON.stringify(payload)
       });
 
@@ -1061,6 +1070,10 @@ class InspectorToolbar {
       }
 
       const result = await response.json();
+
+      console.log(result, apiUrl, getStructureApiUrl, 'fuck here')
+
+
       this.hideLoadingState();
       this.showMessage('Event created successfully!', 'success');
       this.toggleEventForm();
@@ -1161,6 +1174,8 @@ class InspectorToolbar {
     
     // Add collapsed class for smooth transition
     formContainer.classList.add('collapsed');
+    this.toolbar.classList.add('collapsed');
+    this.collapsed = true;
     
     // Update icon to show expand (down arrow)
     const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
@@ -1173,6 +1188,8 @@ class InspectorToolbar {
     
     // Add expanded class for smooth transition
     formContainer.classList.remove('collapsed');
+    this.toolbar.classList.remove('collapsed');
+    this.collapsed = false;
     
     // Update icon to show collapse (up arrow)
     const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>';
@@ -1199,32 +1216,37 @@ class InspectorToolbar {
   }
 
   async fetchCategories() {
-    const site_uuid = this.options.site_uuid;
+    console.log('fuck here 11')
+    const urlParams = new URLSearchParams(window?.location?.search||'');
+    // const apiUrl = urlParams.get('api_url');
+    const apiUrl = 'http://87.247.186.146:8001/api/v1/'
+    const token = urlParams.get('token');
+
     // TODO reform this site_uuid to be removed
-    const url = `https://loadtest.adtrace.ir/api/v1/users/${site_uuid}/goals/categories/structure`;
+    const url = `${apiUrl}analytics/categories/structure`
     try {
-      // const response = await fetch(url);
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
-      // this.categoriesData = await response.json();
-      this.categoriesData = [
-        {
-          "category": "Product 1",
-          "product_types": ["Product 1", "Product Group 1"]
-        },
-        
-        {
-          "category": "Product 2",
-          "product_types": ["Product 2", "Product Group 2"]
-        },
-        
-        {
-          "category": "Product 3",
-          "product_types": ["Product 3", "Product Group 3"]
-        },
-        
-      ]
+
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(url, { headers });
+
+      const result = await response.json();
+
+      console.log(result, 'fuck respone')
+
+      const categoriesData = Object.entries(result).map(([key, value]) => {
+        const productTypes = Object.keys(value || {}) || []
+
+        return {
+          category: key,
+          product_types: productTypes
+        }
+      })
+
+      if (!response.ok) {
+        console.log(`Error on getting categories, event, attributes: HTTP error! status: ${response.status}`);
+      }
+
+      this.categoriesData = categoriesData || []
       this.populateCategories();
     } catch (error) {
       console.error("Could not fetch categories:", error);
@@ -1235,30 +1257,33 @@ class InspectorToolbar {
 
   populateCategories() {
     const categorySelect = this.toolbar.querySelector('#event-category');
+    console.log(this.categoriesData, 'fuck categories')
     if (!this.categoriesData) return;
 
     categorySelect.innerHTML = '<option value="">Select a category</option>';
-    for (const category in this.categoriesData) {
+
+    this.categoriesData.forEach(category => {
       const option = document.createElement('option');
-      option.value = category;
-      option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+      option.value = category.category;
+      option.textContent = category.category.charAt(0).toUpperCase() + category.category.slice(1);
       categorySelect.appendChild(option);
-    }
+    })
   }
 
   updateProductTypes(selectedCategory) {
     const productTypeSelect = this.toolbar.querySelector('#event-type');
-    productTypeSelect.innerHTML = '';
+    productTypeSelect.innerHTML = ''; // Clear existing options
 
-    if (selectedCategory && this.categoriesData && this.categoriesData[selectedCategory]) {
-      const productTypes = this.categoriesData[selectedCategory];
+    const categoryData = this.categoriesData.find(c => c.category === selectedCategory);
+
+    if (categoryData && categoryData.product_types) {
       productTypeSelect.innerHTML = '<option value="">Select a product type</option>';
-      for (const productType in productTypes) {
+      categoryData.product_types.forEach(productType => {
         const option = document.createElement('option');
         option.value = productType;
         option.textContent = productType.charAt(0).toUpperCase() + productType.slice(1);
         productTypeSelect.appendChild(option);
-      }
+      });
     } else {
       productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
     }
