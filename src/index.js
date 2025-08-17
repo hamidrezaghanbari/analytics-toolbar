@@ -708,8 +708,8 @@ class InspectorToolbar {
             <select name="patternOperator[]" class="pattern-operator-select border-none">
               <option value="equals">Equals</option>
               <option value="contains">Contains</option>
-              <option value="startsWith">Starts with</option>
-              <option value="endsWith">Ends with</option>
+              <option value="starts_with">Starts with</option>
+              <option value="ends_with">Ends with</option>
             </select>
           </div>
           <input type="text" name="patternValue[]" class="pattern-value border-none" placeholder="Value">
