@@ -115,9 +115,9 @@ class InspectorToolbar {
                   <div class="form-group-half">
                     <label for="event-trigger">Event Trigger</label>
                     <select id="event-trigger" name="eventTrigger" required>
-                      <option value="element_click"> Click</option>
-                      <option value="page_view">Page View</option>
-                      <option value="element_submit"> Submit</option>
+                      <option value="click"> Click</option>
+                      <option value="pageview">Page View</option>
+                      <option value="form_submit"> Submit</option>
                       <option value="visibility_change">Visible on screen</option>
                     </select>
                   </div>
