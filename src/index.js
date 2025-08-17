@@ -25,6 +25,7 @@ class InspectorToolbar {
     this.attributeCount = 1;
     this.completedSteps = [];
     this.categoriesData = null;
+    this.rawCategoriesData = null;
     this.collapsed = true;
   }
 
@@ -39,7 +40,7 @@ class InspectorToolbar {
 
   createToolbar() {
     this.toolbar = document.createElement('div');
-    this.toolbar.className = 'inspector-toolbar collapsed';
+    this.toolbar.className = 'inspector-toolbar';
     this.toolbar.innerHTML = `
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
@@ -270,7 +271,6 @@ class InspectorToolbar {
   }
 
   applyStyles() {
-    const initialY = this.options.position === 'top' ? '-100%' : '100%';
     Object.assign(this.toolbar.style, {
       position: 'fixed',
       left: '50%',
@@ -278,19 +278,13 @@ class InspectorToolbar {
       backgroundColor: this.options.backgroundColor,
       color: this.options.textColor,
       zIndex: '9999',
-      transform: `translateX(-50%) translateY(${initialY})`,
+      transform: 'translateX(-50%)',
     });
   }
 
   bindEvents() {
     const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
     collapseBtn.addEventListener('click', () => this.toggleCollapse());
-
-    // const hideBtn = this.toolbar.querySelector('#hide-toolbar-btn');
-    // hideBtn.addEventListener('click', () => this.hide());
-
-    // const createEventBtn = this.toolbar.querySelector('#create-event-btn');
-    // createEventBtn.addEventListener('click', () => this.toggleEventForm());
 
     const addPathBtn = this.toolbar.querySelector('#add-path-btn');
     if (addPathBtn) {
@@ -366,6 +360,14 @@ class InspectorToolbar {
         }
       }
     });
+
+    this.toolbar.querySelector('#attributes-container').addEventListener('change', (e) => {
+      if (e.target.matches('[name="attributeName[]"]')) {
+        const categorySelect = this.toolbar.querySelector('#event-category');
+        const productTypeSelect = this.toolbar.querySelector('#event-type');
+        this.updateAttributes(categorySelect.value, productTypeSelect.value);
+      }
+    });
     
     this.boundHandleMouseOver = this.handleMouseOver.bind(this);
     this.boundHandleMouseOut = this.handleMouseOut.bind(this);
@@ -373,6 +375,13 @@ class InspectorToolbar {
 
     const categorySelect = this.toolbar.querySelector('#event-category');
     categorySelect.addEventListener('change', (e) => this.updateProductTypes(e.target.value));
+
+    const productTypeSelect = this.toolbar.querySelector('#event-type');
+    productTypeSelect.addEventListener('change', (e) => {
+      const category = categorySelect.value;
+      const productType = e.target.value;
+      this.updateAttributes(category, productType);
+    });
   }
 
   attachToPage() {
@@ -600,6 +609,12 @@ class InspectorToolbar {
     
     // Insert before the add button
     attributesContainer.insertBefore(newAttribute, addButton);
+    
+    // Repopulate attributes for the new select dropdown
+    const categorySelect = this.toolbar.querySelector('#event-category');
+    const productTypeSelect = this.toolbar.querySelector('#event-type');
+    this.updateAttributes(categorySelect.value, productTypeSelect.value);
+    
     this.updateRemoveAttributeButtons();
   }
 
@@ -1247,6 +1262,7 @@ class InspectorToolbar {
       }
 
       this.categoriesData = categoriesData || []
+      this.rawCategoriesData = result || null
       this.populateCategories();
     } catch (error) {
       console.error("Could not fetch categories:", error);
@@ -1272,7 +1288,10 @@ class InspectorToolbar {
 
   updateProductTypes(selectedCategory) {
     const productTypeSelect = this.toolbar.querySelector('#event-type');
+    const attributeSelects = this.toolbar.querySelectorAll('[name="attributeName[]"]');
+    
     productTypeSelect.innerHTML = ''; // Clear existing options
+    attributeSelects.forEach(s => s.innerHTML = '');
 
     const categoryData = this.categoriesData.find(c => c.category === selectedCategory);
 
@@ -1286,7 +1305,35 @@ class InspectorToolbar {
       });
     } else {
       productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
+      attributeSelects.forEach(s => s.innerHTML = '<option value="">Please select a category first</option>');
     }
+  }
+
+  updateAttributes(selectedCategory, selectedProductType) {
+    const attributeSelects = this.toolbar.querySelectorAll('[name="attributeName[]"]');
+    const allAttributes = Object.keys(this.rawCategoriesData?.[selectedCategory]?.[selectedProductType] || {});
+
+    const selectedValues = Array.from(attributeSelects)
+      .map(select => select.value)
+      .filter(value => value !== '');
+
+    attributeSelects.forEach(attributeSelect => {
+      const currentValue = attributeSelect.value;
+      attributeSelect.innerHTML = '<option value="">Select an attribute</option>';
+      
+      const availableAttributes = allAttributes.filter(attr => {
+        return !selectedValues.includes(attr) || attr === currentValue;
+      });
+
+      availableAttributes.forEach(attr => {
+        const option = document.createElement('option');
+        option.value = attr;
+        option.textContent = attr.charAt(0).toUpperCase() + attr.slice(1);
+        attributeSelect.appendChild(option);
+      });
+
+      attributeSelect.value = currentValue;
+    });
   }
 }
 
