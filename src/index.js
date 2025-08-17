@@ -961,7 +961,9 @@ class InspectorToolbar {
     }
     
     const formData = new FormData(this.toolbar.querySelector('#custom-event-form'));
+    const activeTypeButton = this.toolbar.querySelector('.type-option.active');
     const data = {
+      type: activeTypeButton ? activeTypeButton.dataset.type : 'key',
       eventName: formData.get('eventName'),
       category: formData.get('category'),
       eventType: formData.get('eventType'),
@@ -1058,6 +1060,7 @@ class InspectorToolbar {
     const payload = {
       attributes,
       "count_method": data?.countType,
+      category: data.type === 'general' ? 'default' : 'goal',
       "custom_category": data?.category,
       "domain": window.location.hostname,
       "event_type": data?.eventTrigger,
