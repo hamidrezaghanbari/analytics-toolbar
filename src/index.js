@@ -470,7 +470,7 @@ class InspectorToolbar {
 
     highlighter.addEventListener('click', (e) => {
       e.stopPropagation();
-      console.log('Event clicked:', event);
+      console.log('[INSPECTOR-TOOLBAR] Event clicked:', event);
     });
   
     Object.assign(highlighter.style, {
@@ -1015,8 +1015,8 @@ class InspectorToolbar {
 
   showMessage(message, type = 'success') {
 
-    console.log('[WEBANALYTICS-SDK] show the message', message, type);
-    
+    console.log('[INSPECTOR-TOOLBAR] show the message', message, type);
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `api-message ${type}`;
     messageDiv.textContent = message;
@@ -1077,7 +1077,7 @@ class InspectorToolbar {
     }  
 
     if (!apiUrl) {
-      console.log('No api_url found in search params, skipping API call.');
+      console.log('[INSPECTOR-TOOLBAR] No api_url found in search params, skipping API call.');
       this.hideLoadingState();
       this.showMessage('API URL not provided.', 'error');
       return;
@@ -1266,7 +1266,7 @@ class InspectorToolbar {
 
       const result = await response.json();
 
-      console.log(result, 'response')
+      console.log('[INSPECTOR-TOOLBAR]', result, 'response')
 
       const categoriesData = Object.entries(result).map(([key, value]) => {
         const productTypes = Object.keys(value || {}) || []
@@ -1278,7 +1278,7 @@ class InspectorToolbar {
       })
 
       if (!response.ok) {
-        console.log(`Error on getting categories, event, attributes: HTTP error! status: ${response.status}`);
+        console.log(`[INSPECTOR-TOOLBAR] Error on getting categories, event, attributes: HTTP error! status: ${response.status}`);
       }
 
       this.categoriesData = categoriesData || []
@@ -1293,7 +1293,7 @@ class InspectorToolbar {
 
   populateCategories() {
     const categorySelect = this.toolbar.querySelector('#event-category');
-    console.log(this.categoriesData, 'categories')
+    console.log('[INSPECTOR-TOOLBAR]', this.categoriesData, 'categories')
     if (!this.categoriesData) return;
 
     categorySelect.innerHTML = '<option value="">Select a category</option>';
