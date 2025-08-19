@@ -91,11 +91,7 @@ class InspectorToolbar {
                   </div>
                 </div>
                 
-                <div class="form-group-row">
-                  <label for="event-name">Name</label>
-                  <input type="text" id="event-name" name="eventName" placeholder="Add to cart" required>
-                </div>
-                
+               
                 <div class="form-group-row-split">
                   <div class="form-group-half">
                     <label for="event-category">Custom Category</label>
@@ -491,7 +487,7 @@ class InspectorToolbar {
     });
   
     tooltip.innerHTML = `
-      <div class="tooltip-event-name">${event.eventName || 'Event'}</div>
+      <div class="tooltip-event-name">${event.eventType || 'Event'}</div>
     `;
   }
   
@@ -861,7 +857,6 @@ class InspectorToolbar {
     if (step === 1) {
       // Validate Event Info fields
       const validationRules = {
-        eventName: 'Event name is required',
         category: 'Category is required',
         eventType: 'Event type is required', 
         eventTrigger: 'Event trigger is required',
@@ -964,7 +959,6 @@ class InspectorToolbar {
     const activeTypeButton = this.toolbar.querySelector('.type-option.active');
     const data = {
       type: activeTypeButton ? activeTypeButton.dataset.type : 'key',
-      eventName: formData.get('eventName'),
       category: formData.get('category'),
       eventType: formData.get('eventType'),
       eventTrigger: formData.get('eventTrigger'),
@@ -1020,6 +1014,9 @@ class InspectorToolbar {
   }
 
   showMessage(message, type = 'success') {
+
+    console.log('[WEBANALYTICS-SDK] show the message', message, type);
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `api-message ${type}`;
     messageDiv.textContent = message;
@@ -1064,7 +1061,7 @@ class InspectorToolbar {
       "custom_category": data?.category,
       "domain": window.location.hostname,
       "event_type": data?.eventTrigger,
-      "name": data?.eventName,
+      "name": data?.eventType,
       "product_type": data?.eventType,
       "type": "event",
       page_url: data?.selectors?.map(selector => {
@@ -1088,27 +1085,28 @@ class InspectorToolbar {
     
     try {
       const createEventUrl = apiUrl + `goals/site/domain/${window.location.hostname}`
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
       const response = await fetch(createEventUrl, {
         method: 'POST',
         body: JSON.stringify(payload),
         headers: headers
       });
-
+      
       if (!response.ok) {
-        console.log('error on creating event', response)
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        this.hideLoadingState();
+        this.showMessage(`Error creating event: ${error.message}`, 'error');
+        return;
       }
 
-      const result = await response.json();
+      // go to step 1
+      this.goToStep(1);
 
-      console.log(result, apiUrl, getStructureApiUrl, 'result here')
-
+      this.toolbar.querySelector('#custom-event-form').reset();
 
       this.hideLoadingState();
       this.showMessage('Event created successfully!', 'success');
       this.toggleEventForm();
-      this.toolbar.querySelector('#custom-event-form').reset();
       
     } catch (error) {
       this.hideLoadingState();
@@ -1263,12 +1261,12 @@ class InspectorToolbar {
 
     try {
 
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
       const response = await fetch(url, { headers });
 
       const result = await response.json();
 
-      console.log(result, 'respone')
+      console.log(result, 'response')
 
       const categoriesData = Object.entries(result).map(([key, value]) => {
         const productTypes = Object.keys(value || {}) || []
