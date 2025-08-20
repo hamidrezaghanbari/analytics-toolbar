@@ -1017,12 +1017,25 @@ class InspectorToolbar {
 
     console.log('[INSPECTOR-TOOLBAR] show the message', message, type);
 
+    // Remove any existing messages first
+    const existingMessages = this.toolbar.querySelectorAll('.api-message');
+    existingMessages.forEach(msg => msg.remove());
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `api-message ${type}`;
     messageDiv.textContent = message;
     
-    const form = this.toolbar.querySelector('#custom-event-form');
-    form.appendChild(messageDiv);
+    // Place message at the top of the form container for better visibility
+    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
+    formContainer.insertBefore(messageDiv, formContainer.firstChild);
+    
+    // Ensure the form is expanded to show the message
+    if (formContainer.classList.contains('collapsed')) {
+      this.expandForm();
+    }
+    
+    // Scroll to the message if needed
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
     setTimeout(() => {
       messageDiv.remove();

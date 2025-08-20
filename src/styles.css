@@ -277,7 +277,7 @@
               opacity 0.25s ease-in-out,
               transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               border-top-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  overflow: visible;
   max-height: 520px;
   opacity: 1;
   display: flex;
@@ -295,6 +295,10 @@
   border-top-width: 0;
   transform: scaleY(0.95);
   transition-delay: 0s;
+}
+
+.custom-event-form-container.collapsed .api-message {
+  display: none;
 }
 
 /* Stepper UI Styles */
@@ -985,10 +989,12 @@
 .api-message {
   padding: 12px 16px;
   border-radius: 8px;
-  margin-top: 16px;
+  margin: 16px 8px 8px 8px;
   font-weight: 500;
   animation: slideIn 0.3s ease;
   font-size: 14px;
+  position: relative;
+  z-index: 10;
 }
 
 .api-message.success {
