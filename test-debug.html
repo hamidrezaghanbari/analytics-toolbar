@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector Toolbar Debug Mode Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .product-card {
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .add-to-cart {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #non-existent-button {
+            display: none;
+        }
+        .code-block {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inspector Toolbar Debug Mode Test</h1>
+        
+        <h2>Test Scenarios</h2>
+        
+        <div class="product-card">
+            <h3>Product Card</h3>
+            <p>Test product for debugging</p>
+            <button class="add-to-cart" id="add-to-cart-btn">Add to Cart</button>
+        </div>
+        
+        <div style="margin: 30px 0;">
+            <button class="test-button" onclick="testExistingElement()">
+                Test Debug Mode - Existing Element
+            </button>
+            <button class="test-button" onclick="testNonExistingElement()">
+                Test Debug Mode - Non-Existing Element
+            </button>
+            <button class="test-button" onclick="testNormalMode()">
+                Test Normal Mode (No Debug)
+            </button>
+        </div>
+        
+        <div class="code-block" id="output">
+            Click a button to test debug mode...
+        </div>
+    </div>
+
+    <script type="module">
+        import InspectorToolbar from './dist/inspector-toolbar.es.js';
+        
+        window.testExistingElement = function() {
+            // Clean up any existing instance
+            if (window.inspectorInstance) {
+                window.inspectorInstance.destroy();
+            }
+            
+            // Test with existing element
+            window.inspectorInstance = new InspectorToolbar({
+                debug: true,
+                debugEvent: {
+                    name: 'Add to Cart Event',
+                    selector: '#add-to-cart-btn',
+                    trigger: 'click'
+                }
+            }).init().show();
+            
+            document.getElementById('output').textContent = 
+`Debug Mode: ON
+debugEvent: {
+    name: 'Add to Cart Event',
+    selector: '#add-to-cart-btn',
+    trigger: 'click'
+}
+Result: Should show dashed border and toolbar on "Add to Cart" button`;
+        };
+        
+        window.testNonExistingElement = function() {
+            // Clean up any existing instance
+            if (window.inspectorInstance) {
+                window.inspectorInstance.destroy();
+            }
+            
+            // Test with non-existing element
+            window.inspectorInstance = new InspectorToolbar({
+                debug: true,
+                debugEvent: {
+                    name: 'Non-Existent Button',
+                    selector: '#non-existent-button',
+                    trigger: 'pageview'
+                }
+            }).init().show();
+            
+            document.getElementById('output').textContent = 
+`Debug Mode: ON
+debugEvent: {
+    name: 'Non-Existent Button',
+    selector: '#non-existent-button',
+    trigger: 'pageview'
+}
+Result: Should show permanent toast on top-left saying element not found`;
+        };
+        
+        window.testNormalMode = function() {
+            // Clean up any existing instance
+            if (window.inspectorInstance) {
+                window.inspectorInstance.destroy();
+            }
+            
+            // Test normal mode without debug
+            window.inspectorInstance = new InspectorToolbar({
+                debug: false
+            }).init().show();
+            
+            document.getElementById('output').textContent = 
+`Debug Mode: OFF
+debugEvent: null
+Result: Normal toolbar without any debug overlays`;
+        };
+    </script>
+</body>
+</html>

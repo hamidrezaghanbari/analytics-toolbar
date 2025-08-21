@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Web Analytics API Call Event</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f1f5f9;
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .code-block {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .note {
+            background: #fef3c7;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #f59e0b;
+            margin-top: 20px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Analytics API Call Event Tester</h1>
+    
+    <div class="test-section">
+        <h2>Setup Instructions</h2>
+        <p>Make sure to initialize the InspectorToolbar with debug mode enabled:</p>
+        <div class="code-block">
+const toolbar = new InspectorToolbar({
+    debug: true,  // Enable debug mode
+    // ... other options
+});</div>
+        <div class="note">
+            <strong>Note:</strong> The toast notifications will only appear when debug mode is enabled!
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Event Triggers</h2>
+        <p>Click the buttons below to trigger WEBANALYTICS_API_CALL events with different payloads:</p>
+        
+        <button onclick="triggerPageViewEvent()">Trigger Page View Event</button>
+        <button onclick="triggerClickEvent()">Trigger Click Event</button>
+        <button onclick="triggerFormSubmitEvent()">Trigger Form Submit Event</button>
+        <button onclick="triggerCustomEvent()">Trigger Custom Event</button>
+        <button onclick="triggerErrorEvent()">Trigger Error Event</button>
+        <button onclick="triggerComplexEvent()">Trigger Complex Event</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Event Structure</h2>
+        <p>Each event dispatched has the following structure:</p>
+        <div class="code-block">
+new CustomEvent('WEBANALYTICS_API_CALL', {
+    detail: {
+        name: 'event_name',
+        description: 'Event description',
+        properties: {
+            key1: 'value1',
+            key2: 'value2',
+            // ... more properties
+        }
+    }
+});</div>
+    </div>
+
+    <script type="module">
+        import InspectorToolbar from './src/index-shadow.js';
+        
+        // Initialize toolbar with debug mode
+        const toolbar = new InspectorToolbar({
+            debug: true,
+            position: 'bottom',
+            apiUrl: 'https://example.com/api',
+            token: 'test-token'
+        });
+        
+        toolbar.init();
+        toolbar.show();
+        
+        // Make functions available globally for onclick handlers
+        window.toolbar = toolbar;
+    </script>
+
+    <script>
+        function triggerPageViewEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'page_view',
+                    description: 'User viewed the current page',
+                    properties: {
+                        page_url: window.location.href,
+                        page_title: document.title,
+                        referrer: document.referrer || 'direct',
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Page View Event triggered:', event.detail);
+        }
+
+        function triggerClickEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'button_click',
+                    description: 'User clicked a button',
+                    properties: {
+                        button_text: 'Test Button',
+                        button_id: 'btn-123',
+                        element_path: 'body > div > button',
+                        click_count: Math.floor(Math.random() * 10) + 1,
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Click Event triggered:', event.detail);
+        }
+
+        function triggerFormSubmitEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'form_submit',
+                    description: 'User submitted a form',
+                    properties: {
+                        form_id: 'contact-form',
+                        form_name: 'Contact Us',
+                        fields_count: 5,
+                        validation_passed: true,
+                        submit_time: new Date().toISOString(),
+                        form_data: {
+                            email: 'user@example.com',
+                            subject: 'Test Submission'
+                        }
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Form Submit Event triggered:', event.detail);
+        }
+
+        function triggerCustomEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'video_play',
+                    description: 'User started playing a video',
+                    properties: {
+                        video_id: 'vid-456',
+                        video_title: 'Introduction Tutorial',
+                        duration: 180,
+                        current_time: 0,
+                        quality: '1080p',
+                        autoplay: false
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Custom Event triggered:', event.detail);
+        }
+
+        function triggerErrorEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'error_occurred',
+                    description: 'An error was captured',
+                    properties: {
+                        error_type: 'NetworkError',
+                        error_message: 'Failed to fetch resource',
+                        error_code: 500,
+                        stack_trace: 'Error at fetchData() line 42',
+                        url: '/api/data',
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Error Event triggered:', event.detail);
+        }
+
+        function triggerComplexEvent() {
+            const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+                detail: {
+                    name: 'purchase_completed',
+                    description: 'User completed a purchase',
+                    properties: {
+                        transaction_id: 'TXN-' + Math.random().toString(36).substr(2, 9),
+                        amount: 299.99,
+                        currency: 'USD',
+                        items: [
+                            { id: 'PROD-001', name: 'Premium Plan', price: 199.99 },
+                            { id: 'PROD-002', name: 'Extra Storage', price: 100.00 }
+                        ],
+                        payment_method: 'credit_card',
+                        shipping_address: {
+                            country: 'US',
+                            state: 'CA',
+                            city: 'San Francisco'
+                        },
+                        discount_applied: 50.00,
+                        tax: 25.00,
+                        total: 274.99,
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            });
+            document.dispatchEvent(event);
+            console.log('Complex Event triggered:', event.detail);
+        }
+    </script>
+</body>
+</html>

@@ -14,6 +14,7 @@ class InspectorToolbar {
       apiUrl: null,
       token: null,
       debug: false,
+      debugEvent: null,
       position: 'bottom',
       height: '60px',
       backgroundColor: '#ffffff',
@@ -36,6 +37,7 @@ class InspectorToolbar {
     this.categoriesData = null;
     this.rawCategoriesData = null;
     this.collapsed = true;
+    this.debugElements = [];
   }
 
   init() {
@@ -45,6 +47,17 @@ class InspectorToolbar {
     this.createInspectorElements();
     this.showConstantEvents();
     this.fetchCategories();
+    
+    // Handle debug mode
+    if (this.options.debug && this.options.debugEvent) {
+      this.showDebugElement(this.options.debugEvent);
+    }
+    
+    // Listen for WEBANALYTICS_API_CALL custom event when debug is enabled
+    if (this.options.debug) {
+      this.listenForWebAnalyticsEvents();
+    }
+    
     return this;
   }
 
@@ -1136,6 +1149,456 @@ class InspectorToolbar {
     `;
   }
 
+  showDebugElement(debugEvent) {
+    const { name, selector, trigger } = debugEvent;
+    
+    // If trigger is pageview, select the whole page
+    let element;
+    if (trigger === 'pageview') {
+      element = document.body; // Select the whole page
+    } else {
+      if (!selector) {
+        console.error('[INSPECTOR-TOOLBAR] Debug event must have a selector');
+        return;
+      }
+      
+      element = document.querySelector(selector);
+      
+      if (!element) {
+        // Show permanent toast on top left if element not found
+        this.showPermanentToast(`Element not found: "${selector}"`, name);
+        return;
+      }
+    }
+    
+    // Get element position
+    const rect = element.getBoundingClientRect();
+    
+    // Create debug border
+    const debugBorder = document.createElement('div');
+    debugBorder.className = 'inspector-debug-border';
+    debugBorder.style.cssText = `
+      position: absolute;
+      top: ${rect.top + window.scrollY}px;
+      left: ${rect.left + window.scrollX}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      border: 2px solid #2563eb;
+      background: rgba(37, 99, 235, 0.08);
+      pointer-events: none;
+      z-index: 9997;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), inset 0 0 20px rgba(37, 99, 235, 0.05);
+      border-radius: 4px;
+      animation: debugPulse 2s ease-in-out infinite;
+    `;
+    document.body.appendChild(debugBorder);
+    
+    // Add animation styles if not present
+    if (!document.getElementById('inspector-debug-styles')) {
+      const style = document.createElement('style');
+      style.id = 'inspector-debug-styles';
+      style.textContent = `
+        @keyframes debugPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), inset 0 0 20px rgba(37, 99, 235, 0.05);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.15), inset 0 0 25px rgba(37, 99, 235, 0.08);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Create debug toolbar - positioned higher above the element
+    const debugToolbar = document.createElement('div');
+    debugToolbar.className = 'inspector-debug-toolbar';
+    const toolbarOffset = Math.min(rect.top, 60); // Ensure toolbar fits on screen
+    debugToolbar.style.cssText = `
+      position: absolute;
+      top: ${rect.top + window.scrollY - toolbarOffset}px;
+      left: ${rect.left + window.scrollX}px;
+      min-width: 200px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+      z-index: 9998;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    `;
+    
+    debugToolbar.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-weight: 600; font-size: 13px; letter-spacing: 0.3px;">${name || 'Debug Event'}</div>
+        <div style="opacity: 0.85; font-size: 11px; text-transform: capitalize;">
+          <span style="opacity: 0.7;">Trigger:</span> ${trigger || 'unknown'}
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(debugToolbar);
+    
+    // Store references for cleanup
+    this.debugElements.push(debugBorder, debugToolbar);
+    
+    // Update position on scroll/resize
+    const updatePosition = () => {
+      const newRect = element.getBoundingClientRect();
+      const toolbarOffset = Math.min(newRect.top, 60);
+      
+      debugBorder.style.top = `${newRect.top + window.scrollY}px`;
+      debugBorder.style.left = `${newRect.left + window.scrollX}px`;
+      debugBorder.style.width = `${newRect.width}px`;
+      debugBorder.style.height = `${newRect.height}px`;
+      
+      debugToolbar.style.top = `${newRect.top + window.scrollY - toolbarOffset}px`;
+      debugToolbar.style.left = `${newRect.left + window.scrollX}px`;
+    };
+    
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+  }
+  
+  showPermanentToast(message, eventName) {
+    // Create permanent toast container
+    let permanentToastContainer = document.getElementById('inspector-permanent-toast');
+    if (!permanentToastContainer) {
+      permanentToastContainer = document.createElement('div');
+      permanentToastContainer.id = 'inspector-permanent-toast';
+      permanentToastContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 999999;
+        pointer-events: auto;
+      `;
+      document.body.appendChild(permanentToastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      min-width: 300px;
+      max-width: 400px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+      color: white;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      line-height: 1.4;
+    `;
+    
+    toast.innerHTML = `
+      <div style="flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12" y2="17"></line>
+        </svg>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-weight: bold; margin-bottom: 4px;">${eventName || 'Debug Event'}</div>
+        <div style="opacity: 0.9;">${message}</div>
+      </div>
+    `;
+    
+    permanentToastContainer.appendChild(toast);
+    
+    // Store reference for cleanup
+    this.debugElements.push(toast);
+  }
+
+  listenForWebAnalyticsEvents() {
+    // Listen for WEBANALYTICS_API_CALL custom event
+    document.addEventListener('WEBANALYTICS_API_CALL', (event) => {
+      if (this.options.debug) {
+        console.log('[INSPECTOR-TOOLBAR] WEBANALYTICS_API_CALL event received:', event.detail);
+        
+        // Extract payload from event
+        const payload = event.detail || {};
+        const { name, properties, description } = payload;
+        
+        // Format the payload for display
+        let formattedMessage = '<div style="text-align: left;">';
+        formattedMessage += '<div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #1e293b; letter-spacing: -0.025em;">Analytics Event Captured</div>';
+        
+        if (name) {
+          formattedMessage += `
+            <div style="margin-bottom: 8px;">
+              <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Event Name</span>
+              <div style="color: #2460e3; font-size: 14px; font-weight: 600; margin-top: 2px;">${name}</div>
+            </div>
+          `;
+        }
+        
+        if (description) {
+          formattedMessage += `
+            <div style="margin-bottom: 8px;">
+              <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Description</span>
+              <div style="color: #475569; font-size: 13px; margin-top: 2px;">${description}</div>
+            </div>
+          `;
+        }
+        
+        if (properties && Object.keys(properties).length > 0) {
+          formattedMessage += `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(36, 96, 227, 0.1);">
+              <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Properties</span>
+              <div style="margin-top: 8px; background: rgba(36, 96, 227, 0.05); border-radius: 8px; padding: 10px; border: 1px solid rgba(36, 96, 227, 0.1);">
+          `;
+          
+          for (const [key, value] of Object.entries(properties)) {
+            const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+            const isObject = typeof value === 'object';
+            
+            formattedMessage += `
+              <div style="display: flex; align-items: ${isObject ? 'flex-start' : 'center'}; margin-bottom: 6px; last-child:margin-bottom: 0;">
+                <span style="color: #2460e3; font-size: 12px; font-weight: 600; margin-right: 8px; min-width: fit-content;">${key}:</span>
+                <span style="color: #334155; font-size: 12px; word-break: break-word; ${isObject ? 'font-family: monospace; white-space: pre-wrap;' : ''}">${displayValue}</span>
+              </div>
+            `;
+          }
+          
+          formattedMessage += '</div></div>';
+        }
+        
+        formattedMessage += '</div>';
+        
+        // Show the payload in a toast on the top right
+        this.showAnalyticsToast(formattedMessage);
+      }
+    });
+  }
+
+  showAnalyticsToast(htmlContent) {
+    // Create or get toast container in the main document body (outside Shadow DOM)
+    let toastContainer = document.getElementById('inspector-analytics-toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'inspector-analytics-toast-container';
+      toastContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+        max-height: 80vh;
+        overflow-y: auto;
+      `;
+      document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element for analytics payload
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      min-width: 380px;
+      max-width: 480px;
+      padding: 20px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      pointer-events: auto;
+      animation: toastSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      line-height: 1.6;
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.98) 0%, 
+        rgba(248, 250, 252, 0.98) 100%);
+      color: #1e293b;
+      border: 1px solid rgba(36, 96, 227, 0.2);
+      box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(36, 96, 227, 0.08),
+        inset 0 1px 0 0 rgba(255, 255, 255, 1);
+      transform: translateX(0);
+    `;
+    
+    // Analytics icon with gradient
+    const analyticsIcon = `
+      <div style="
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #2460e3 0%, #1e50c0 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(36, 96, 227, 0.25);
+      ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 21H3V3"></path>
+          <path d="M21 12L13 12L9 16L6 13L3 16"></path>
+        </svg>
+      </div>
+    `;
+
+    toast.innerHTML = `
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        ${analyticsIcon}
+        <div style="flex: 1; word-wrap: break-word; max-height: 400px; overflow-y: auto; padding-right: 10px;">
+          ${htmlContent}
+        </div>
+        <button style="
+          flex-shrink: 0; 
+          width: 28px; 
+          height: 28px; 
+          background: rgba(36, 96, 227, 0.08); 
+          border: none; 
+          color: #64748b; 
+          cursor: pointer; 
+          transition: all 0.2s ease; 
+          padding: 0; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          border-radius: 6px;
+        " 
+        onmouseover="this.style.background='rgba(36, 96, 227, 0.15)'; this.style.color='#2460e3';" 
+        onmouseout="this.style.background='rgba(36, 96, 227, 0.08)'; this.style.color='#64748b';"
+        aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div style="
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        height: 2px; 
+        width: 100%; 
+        background: linear-gradient(90deg, #2460e3 0%, #1e50c0 100%); 
+        animation: toastProgress 10s linear; 
+        transform-origin: left;
+        opacity: 0.9;
+      "></div>
+    `;
+
+    // Add CSS animations if not already present
+    if (!document.getElementById('inspector-toast-styles')) {
+      const style = document.createElement('style');
+      style.id = 'inspector-toast-styles';
+      style.textContent = `
+        @keyframes toastSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes toastSlideOut {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+        }
+        @keyframes toastProgress {
+          from {
+            transform: scaleX(1);
+          }
+          to {
+            transform: scaleX(0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Add to container
+    toastContainer.appendChild(toast);
+
+    // Close button functionality
+    const closeBtn = toast.querySelector('button');
+    const removeToast = () => {
+      toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+      setTimeout(() => {
+        toast.remove();
+        // Remove container if empty
+        if (toastContainer.children.length === 0) {
+          toastContainer.remove();
+        }
+      }, 300);
+    };
+
+    closeBtn.addEventListener('click', removeToast);
+
+    // Auto remove after 10 seconds (matching the progress bar duration)
+    const autoRemoveTimeout = setTimeout(removeToast, 10000);
+
+    // Clear timeout if user hovers (combined with hover effect)
+    toast.addEventListener('mouseenter', () => {
+      clearTimeout(autoRemoveTimeout);
+      const progress = toast.querySelector('div:last-child');
+      if (progress) {
+        progress.style.animationPlayState = 'paused';
+      }
+      // Also apply hover styling
+      toast.style.transform = 'translateX(-4px) scale(1.01)';
+      toast.style.boxShadow = `
+        0 4px 6px -1px rgba(0, 0, 0, 0.15),
+        0 2px 4px -1px rgba(0, 0, 0, 0.08),
+        0 25px 30px -5px rgba(0, 0, 0, 0.15),
+        0 15px 20px -5px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(36, 96, 227, 0.15),
+        inset 0 1px 0 0 rgba(255, 255, 255, 1)
+      `;
+      toast.style.borderColor = 'rgba(36, 96, 227, 0.3)';
+    });
+
+    toast.addEventListener('mouseleave', () => {
+      const progress = toast.querySelector('div:last-child');
+      if (progress) {
+        progress.style.animationPlayState = 'running';
+      }
+      // Also remove hover styling
+      toast.style.transform = 'translateX(0) scale(1)';
+      toast.style.boxShadow = `
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(36, 96, 227, 0.08),
+        inset 0 1px 0 0 rgba(255, 255, 255, 1)
+      `;
+      toast.style.borderColor = 'rgba(36, 96, 227, 0.2)';
+    });
+  }
+
   showMessage(message, type = 'success') {
     if (this.options.debug) {
       console.log('[INSPECTOR-TOOLBAR] Message:', message, 'Type:', type);
@@ -1641,15 +2104,42 @@ class InspectorToolbar {
     if (this.tooltip && this.tooltip.parentNode) {
         this.tooltip.parentNode.removeChild(this.tooltip);
     }
+    
+    // Clean up debug elements
+    this.debugElements.forEach(element => {
+      if (element && element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    });
+    this.debugElements = [];
+    
+    // Remove permanent toast container
+    const permanentToastContainer = document.getElementById('inspector-permanent-toast');
+    if (permanentToastContainer) {
+      permanentToastContainer.remove();
+    }
+    
     // Remove toast container
     const toastContainer = document.getElementById('inspector-toast-container');
     if (toastContainer) {
       toastContainer.remove();
     }
+    
+    // Remove analytics toast container
+    const analyticsToastContainer = document.getElementById('inspector-analytics-toast-container');
+    if (analyticsToastContainer) {
+      analyticsToastContainer.remove();
+    }
+    
     // Remove toast styles
     const toastStyles = document.getElementById('inspector-toast-styles');
     if (toastStyles) {
       toastStyles.remove();
+    }
+    // Remove debug styles
+    const debugStyles = document.getElementById('inspector-debug-styles');
+    if (debugStyles) {
+      debugStyles.remove();
     }
     this.toolbarHost = null;
     this.shadowRoot = null;

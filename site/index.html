@@ -21,17 +21,167 @@ fdsa        </div>
         </div>
       </div>
       <div class="product-details">
-        <h2>Product Details</h2>
+        <h2 id="add-to-cart-btn">Product Details</h2>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
       </div>
     </div>
 
 
 
+    <button onclick="triggerPageViewEvent()">Trigger Page View Event</button>
+    <button onclick="triggerClickEvent()">Trigger Click Event</button>
+    <button onclick="triggerFormSubmitEvent()">Trigger Form Submit Event</button>
+    <button onclick="triggerCustomEvent()">Trigger Custom Event</button>
+    <button onclick="triggerErrorEvent()">Trigger Error Event</button>
+    <button onclick="triggerComplexEvent()">Trigger Complex Event</button>
+
+
+    <script>
+      function triggerPageViewEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'page_view',
+                  description: 'User viewed the current page',
+                  properties: {
+                      page_url: window.location.href,
+                      page_title: document.title,
+                      referrer: document.referrer || 'direct',
+                      timestamp: new Date().toISOString(),
+                      user_agent: navigator.userAgent
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Page View Event triggered:', event.detail);
+      }
+
+      function triggerClickEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'button_click',
+                  description: 'User clicked a button',
+                  properties: {
+                      button_text: 'Test Button',
+                      button_id: 'btn-123',
+                      element_path: 'body > div > button',
+                      click_count: Math.floor(Math.random() * 10) + 1,
+                      timestamp: new Date().toISOString()
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Click Event triggered:', event.detail);
+      }
+
+      function triggerFormSubmitEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'form_submit',
+                  description: 'User submitted a form',
+                  properties: {
+                      form_id: 'contact-form',
+                      form_name: 'Contact Us',
+                      fields_count: 5,
+                      validation_passed: true,
+                      submit_time: new Date().toISOString(),
+                      form_data: {
+                          email: 'user@example.com',
+                          subject: 'Test Submission'
+                      }
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Form Submit Event triggered:', event.detail);
+      }
+
+      function triggerCustomEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'video_play',
+                  description: 'User started playing a video',
+                  properties: {
+                      video_id: 'vid-456',
+                      video_title: 'Introduction Tutorial',
+                      duration: 180,
+                      current_time: 0,
+                      quality: '1080p',
+                      autoplay: false
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Custom Event triggered:', event.detail);
+      }
+
+      function triggerErrorEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'error_occurred',
+                  description: 'An error was captured',
+                  properties: {
+                      error_type: 'NetworkError',
+                      error_message: 'Failed to fetch resource',
+                      error_code: 500,
+                      stack_trace: 'Error at fetchData() line 42',
+                      url: '/api/data',
+                      timestamp: new Date().toISOString()
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Error Event triggered:', event.detail);
+      }
+
+      function triggerComplexEvent() {
+          const event = new CustomEvent('WEBANALYTICS_API_CALL', {
+              detail: {
+                  name: 'purchase_completed',
+                  description: 'User completed a purchase',
+                  properties: {
+                      transaction_id: 'TXN-' + Math.random().toString(36).substr(2, 9),
+                      amount: 299.99,
+                      currency: 'USD',
+                      items: [
+                          { id: 'PROD-001', name: 'Premium Plan', price: 199.99 },
+                          { id: 'PROD-002', name: 'Extra Storage', price: 100.00 }
+                      ],
+                      payment_method: 'credit_card',
+                      shipping_address: {
+                          country: 'US',
+                          state: 'CA',
+                          city: 'San Francisco'
+                      },
+                      discount_applied: 50.00,
+                      tax: 25.00,
+                      total: 274.99,
+                      timestamp: new Date().toISOString()
+                  }
+              }
+          });
+          document.dispatchEvent(event);
+          console.log('Complex Event triggered:', event.detail);
+      }
+  </script>
+
+
+
   <script src="inspector-toolbar.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      new InspectorToolbar().init({position: 'bottom'});
+      new InspectorToolbar({
+                debug: true,
+                debugEvent: {
+                    name: 'Add to Cart Event',
+                    selector: '#add-to-cart-btn',
+                    trigger: 'pageview'
+                }
+                // debugEvent: {
+                //     name: 'Add to Cart Event',
+                //     selector: '#add-to-cart-btn',
+                //     trigger: 'click'
+                // }
+            }).init().show();
     });
   </script>
 </body>
