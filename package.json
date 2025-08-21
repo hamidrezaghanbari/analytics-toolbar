@@ -4,6 +4,7 @@
   "description": "JavaScript SDK for sticky toolbar",
   "main": "site/inspector-toolbar.js",
   "scripts": {
+    "dev": "webpack serve --mode=development --open",
     "build": "webpack --mode=production"
   },
   "keywords": [

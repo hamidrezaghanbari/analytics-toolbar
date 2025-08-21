@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector Toolbar - Page View Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .steps-info {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Inspector Toolbar - Page View Event Test</h1>
+        
+        <div class="info-box">
+            <h3>📋 Test Instructions</h3>
+            <p>This page tests the new Page View event trigger functionality.</p>
+            <ol>
+                <li>Open the Inspector Toolbar (it should appear at the bottom right)</li>
+                <li>In Step 1, select any Category and Event</li>
+                <li>Select <code>Page View</code> from the Event Trigger dropdown</li>
+                <li>Click Next - it should skip directly to Step 3 (Attributes)</li>
+                <li>The Step 2 (Selectors) indicator should show as "Skipped"</li>
+            </ol>
+        </div>
+
+        <div class="steps-info">
+            <h3>✨ Expected Behavior</h3>
+            <ul>
+                <li>When "Page View" is selected: Step 1 → Step 3 (skip Step 2)</li>
+                <li>When "Click" or "Visible on screen" is selected: Step 1 → Step 2 → Step 3</li>
+                <li>Step 2 should be visually marked as "Skipped" when Page View is selected</li>
+                <li>Using Previous button from Step 3 should go back to Step 1 (not Step 2)</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Elements</h2>
+            <div class="button-group">
+                <button id="test-btn-1">Test Button 1</button>
+                <button id="test-btn-2">Test Button 2</button>
+                <button class="special-btn">Special Button</button>
+            </div>
+            
+            <div id="content-area">
+                <p>This is a test content area with some text.</p>
+                <p data-value="test-data">This paragraph has a data attribute.</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Navigation Test</h3>
+            <p>Try switching between different Event Triggers and observe how the stepper behaves:</p>
+            <ul>
+                <li>Switch from "Click" to "Page View" - Step 2 should become disabled</li>
+                <li>Switch back to "Click" - Step 2 should become enabled again</li>
+                <li>The navigation should be smooth and intuitive</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Include the Inspector Toolbar -->
+    <script src="site/inspector-toolbar.js"></script>
+    <script>
+        // Initialize the toolbar with test configuration
+        window.InspectorToolbar.init({
+            position: 'bottom-right',
+            events: [
+                { category: 'E-commerce', name: 'Add to Cart' },
+                { category: 'E-commerce', name: 'Purchase' },
+                { category: 'Engagement', name: 'Video Play' },
+                { category: 'Engagement', name: 'Form Submit' },
+                { category: 'Navigation', name: 'Page View' },
+                { category: 'Navigation', name: 'Link Click' }
+            ]
+        });
+
+        // Log toolbar events for debugging
+        document.addEventListener('inspectorToolbarEvent', (e) => {
+            console.log('Inspector Toolbar Event:', e.detail);
+        });
+    </script>
+</body>
+</html>

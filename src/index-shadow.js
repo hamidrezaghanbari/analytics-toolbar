@@ -265,23 +265,23 @@ class InspectorToolbar {
                 </div>
               </div>
             </div>
-            
-            <div class="form-actions">
-              <button type="button" id="prev-step-btn" class="secondary-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-                Previous
-              </button>
-              <button type="button" id="next-step-btn">
-                Next
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
           </div>
         </form>
+
+        <div class="form-actions">
+          <button type="button" id="prev-step-btn" class="secondary-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Previous
+          </button>
+          <button type="button" id="next-step-btn">
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
     `;
 
@@ -354,6 +354,14 @@ class InspectorToolbar {
     
     nextStepBtn.addEventListener('click', () => this.nextStep());
     prevStepBtn.addEventListener('click', () => this.prevStep());
+    
+    // Handle event trigger changes to update step indicators
+    const eventTriggerSelect = this.$('#event-trigger');
+    if (eventTriggerSelect) {
+      eventTriggerSelect.addEventListener('change', () => {
+        this.updateStepperForEventTrigger();
+      });
+    }
 
     this.goToStep(1);
     
@@ -403,6 +411,13 @@ class InspectorToolbar {
       if (e.target.closest('.stepper-step')) {
         const stepElement = e.target.closest('.stepper-step');
         const stepNumber = parseInt(stepElement.dataset.step);
+        
+        // Don't allow direct navigation to step 2 if pageview is selected
+        const eventTrigger = this.$('#event-trigger')?.value;
+        if (stepNumber === 2 && eventTrigger === 'pageview') {
+          return; // Skip step 2 for pageview
+        }
+        
         if (!stepElement.classList.contains('active') && this.isStepAccessible(stepNumber)) {
           this.goToStep(stepNumber);
         }
@@ -787,7 +802,19 @@ class InspectorToolbar {
       if (!isValid) return;
       
       this.markStepCompleted(this.currentStep);
-      this.goToStep(this.currentStep + 1);
+      
+      // Skip step 2 (Selectors) if Page View is selected
+      let nextStepNumber = this.currentStep + 1;
+      if (this.currentStep === 1) {
+        const eventTrigger = this.$('#event-trigger')?.value;
+        if (eventTrigger === 'pageview' && nextStepNumber === 2) {
+          // Mark step 2 as completed and skip to step 3
+          this.markStepCompleted(2);
+          nextStepNumber = 3;
+        }
+      }
+      
+      this.goToStep(nextStepNumber);
     } else {
       this.handleFormSubmit(new Event('submit'));
     }
@@ -797,7 +824,15 @@ class InspectorToolbar {
     if (this.currentStep === 1) {
       this.toggleCollapse();
     } else if (this.currentStep > 1) {
-      this.goToStep(this.currentStep - 1);
+      // Skip step 2 (Selectors) when going back if Page View is selected
+      let prevStepNumber = this.currentStep - 1;
+      if (this.currentStep === 3) {
+        const eventTrigger = this.$('#event-trigger')?.value;
+        if (eventTrigger === 'pageview' && prevStepNumber === 2) {
+          prevStepNumber = 1;
+        }
+      }
+      this.goToStep(prevStepNumber);
     }
   }
   
@@ -903,6 +938,30 @@ class InspectorToolbar {
     return this.completedSteps.includes(stepNumber - 1) || this.currentStep >= stepNumber;
   }
 
+  updateStepperForEventTrigger() {
+    const eventTrigger = this.$('#event-trigger')?.value;
+    const step2Element = this.$('.stepper-step[data-step="2"]');
+    const step2Label = step2Element?.querySelector('.step-label');
+    
+    if (eventTrigger === 'pageview') {
+      // Visually indicate step 2 will be skipped
+      if (step2Element) {
+        step2Element.classList.add('will-skip');
+        if (step2Label) {
+          step2Label.textContent = 'Selectors (Skipped)';
+        }
+      }
+    } else {
+      // Reset to normal state
+      if (step2Element) {
+        step2Element.classList.remove('will-skip');
+        if (step2Label) {
+          step2Label.textContent = 'Selectors';
+        }
+      }
+    }
+  }
+
   validateStep(step) {
     this.clearValidationErrors();
     let hasErrors = false;
@@ -924,6 +983,12 @@ class InspectorToolbar {
         }
       });
     } else if (step === 2) {
+      // Skip validation for step 2 if pageview is selected
+      const eventTrigger = this.$('#event-trigger')?.value;
+      if (eventTrigger === 'pageview') {
+        return true; // Skip validation for pageview
+      }
+      
       const selectorInputs = stepContent.querySelectorAll('input[name="elementSelector[]"]');
       let hasValidSelector = false;
       
