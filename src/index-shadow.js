@@ -1,13 +1,11 @@
-import './styles.css';
+import { getShadowStyles } from './shadow-styles.js';
 
 class InspectorToolbar {
   _getEvents() {
     const events = this.options.events;
-
     if (Array.isArray(events)) {
       return events;
     }
-
     return [];
   }
 
@@ -23,6 +21,8 @@ class InspectorToolbar {
       ...options
     };
     
+    this.toolbarHost = null;
+    this.shadowRoot = null;
     this.toolbar = null;
     this.isVisible = false;
     this.isInspecting = false;
@@ -39,6 +39,7 @@ class InspectorToolbar {
   }
 
   init() {
+    this.createToolbarHost();
     this.createToolbar();
     this.attachToPage();
     this.createInspectorElements();
@@ -47,10 +48,33 @@ class InspectorToolbar {
     return this;
   }
 
+  createToolbarHost() {
+    // Create a host element for the Shadow DOM
+    this.toolbarHost = document.createElement('div');
+    this.toolbarHost.id = 'inspector-toolbar-host';
+    this.toolbarHost.style.cssText = `
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 50px;
+      z-index: 9999;
+      pointer-events: auto;
+    `;
+    
+    // Create Shadow DOM
+    this.shadowRoot = this.toolbarHost.attachShadow({ mode: 'open' });
+  }
+
   createToolbar() {
-    this.toolbar = document.createElement('div');
-    this.toolbar.className = 'inspector-toolbar';
-    this.toolbar.innerHTML = `
+    // Inject styles into Shadow DOM
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = getShadowStyles();
+    this.shadowRoot.appendChild(styleSheet);
+
+    // Create toolbar structure inside Shadow DOM
+    const toolbarWrapper = document.createElement('div');
+    toolbarWrapper.className = 'inspector-toolbar-wrapper collapsed';
+    toolbarWrapper.innerHTML = `
       <div class="inspector-toolbar-content">
         <div class="toolbar-left">
           <div class="toolbar-logo">
@@ -103,23 +127,15 @@ class InspectorToolbar {
                
                 <div class="form-group-row-split">
                   <div class="form-group-half">
-                    <label for="event-category">Custom Category</label>
+                    <label for="event-category">Category</label>
                     <select id="event-category" name="category" required>
                       <option value="">Loading...</option>
                     </select>
                   </div>
                   <div class="form-group-half">
-                    <label for="event-type">
-                      Event
-                      <span class="event-disabled-indicator" title="Select a category first to enable">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                          <path d="M7 11V7a5 5 0 0110 0v4"></path>
-                        </svg>
-                      </span>
-                    </label>
-                    <select id="event-type" name="eventType" required disabled>
-                      <option value="">Please select a category first</option>
+                    <label for="event-type">Event</label>
+                    <select id="event-type" name="eventType" required>
+                      <option value="">Please select a category</option>
                     </select>
                   </div>
                 </div>
@@ -130,7 +146,6 @@ class InspectorToolbar {
                     <select id="event-trigger" name="eventTrigger" required>
                       <option value="click"> Click</option>
                       <option value="pageview">Page View</option>
-                      <option value="form_submit"> Submit</option>
                       <option value="visibility_change">Visible on screen</option>
                     </select>
                   </div>
@@ -270,54 +285,72 @@ class InspectorToolbar {
       </div>
     `;
 
-    this.applyStyles();
+    this.shadowRoot.appendChild(toolbarWrapper);
+    this.toolbar = toolbarWrapper;
+    
     this.bindEvents();
   }
 
+  // Helper method to query elements in Shadow DOM
+  $(selector) {
+    return this.shadowRoot.querySelector(selector);
+  }
+
+  $$(selector) {
+    return this.shadowRoot.querySelectorAll(selector);
+  }
+
   createInspectorElements() {
+    // These elements need to be in the main DOM for inspection
     this.highlighter = document.createElement('div');
-    this.highlighter.className = 'inspector-highlighter';
+    this.highlighter.style.cssText = `
+      position: absolute;
+      background-color: rgba(59, 130, 246, 0.15);
+      border: 2px solid #3b82f6;
+      border-radius: 4px;
+      z-index: 9998;
+      display: none;
+      pointer-events: none;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    `;
     document.body.appendChild(this.highlighter);
 
     this.tooltip = document.createElement('div');
-    this.tooltip.className = 'inspector-tooltip';
+    this.tooltip.style.cssText = `
+      position: absolute;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      z-index: 9999999;
+      display: none;
+      font-size: 10px;
+      pointer-events: none;
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+    `;
     document.body.appendChild(this.tooltip);
   }
 
-  applyStyles() {
-    Object.assign(this.toolbar.style, {
-      position: 'fixed',
-      left: '50%',
-      height: this.options.height,
-      backgroundColor: this.options.backgroundColor,
-      color: this.options.textColor,
-      zIndex: '9999',
-      transform: 'translateX(-50%)',
-    });
-  }
-
   bindEvents() {
-    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
+    const collapseBtn = this.$('.inspector-toolbar-collapse');
     collapseBtn.addEventListener('click', () => this.toggleCollapse());
     
     // Add keyboard navigation support
     this.setupKeyboardNavigation();
 
-    const addPathBtn = this.toolbar.querySelector('#add-path-btn');
-    if (addPathBtn) {
-      addPathBtn.addEventListener('click', () => this.addPathInput());
-    }
-
-    const addAttributeBtn = this.toolbar.querySelector('#add-attribute-btn');
+    const addAttributeBtn = this.$('#add-attribute-btn');
     addAttributeBtn.addEventListener('click', () => this.addAttribute());
     
     // Add Selector button
-    const addSelectorBtn = this.toolbar.querySelector('#add-selector-btn');
+    const addSelectorBtn = this.$('#add-selector-btn');
     addSelectorBtn.addEventListener('click', () => this.addSelector());
     
     // Stepper navigation
-    const nextStepBtn = this.toolbar.querySelector('#next-step-btn');
-    const prevStepBtn = this.toolbar.querySelector('#prev-step-btn');
+    const nextStepBtn = this.$('#next-step-btn');
+    const prevStepBtn = this.$('#prev-step-btn');
     
     nextStepBtn.addEventListener('click', () => this.nextStep());
     prevStepBtn.addEventListener('click', () => this.prevStep());
@@ -325,7 +358,7 @@ class InspectorToolbar {
     this.goToStep(1);
     
     // Type selector buttons
-    const typeOptions = this.toolbar.querySelectorAll('.type-option');
+    const typeOptions = this.$$('.type-option');
     typeOptions.forEach(option => {
       option.addEventListener('click', () => {
         typeOptions.forEach(btn => btn.classList.remove('active'));
@@ -333,7 +366,7 @@ class InspectorToolbar {
       });
     });
 
-    const form = this.toolbar.querySelector('#custom-event-form');
+    const form = this.$('#custom-event-form');
     form.addEventListener('submit', (e) => this.handleFormSubmit(e));
     
     // Clear errors when user starts typing
@@ -350,10 +383,8 @@ class InspectorToolbar {
       }
     });
     
-    this.toolbar.addEventListener('click', (e) => {
-      if (e.target.classList.contains('remove-path-btn')) {
-        this.removePathInput(e.target);
-      }
+    // Event delegation for dynamic elements
+    this.shadowRoot.addEventListener('click', (e) => {
       if (e.target.closest('.remove-attribute-btn')) {
         this.removeAttribute(e.target.closest('.attribute-block'));
       }
@@ -371,28 +402,17 @@ class InspectorToolbar {
       }
       if (e.target.closest('.stepper-step')) {
         const stepElement = e.target.closest('.stepper-step');
-        const originalStepNumber = parseInt(stepElement.dataset.step);
-        
-        // Map the step number for pageview trigger
-        let stepNumber = originalStepNumber;
-        if (this.shouldSkipSelectorsStep()) {
-          if (originalStepNumber === 2) {
-            return; // Don't allow clicking on hidden step 2
-          } else if (originalStepNumber === 3) {
-            stepNumber = 2; // Step 3 becomes step 2
-          }
-        }
-        
-        if (!stepElement.classList.contains('active') && this.isStepAccessible(originalStepNumber)) {
+        const stepNumber = parseInt(stepElement.dataset.step);
+        if (!stepElement.classList.contains('active') && this.isStepAccessible(stepNumber)) {
           this.goToStep(stepNumber);
         }
       }
     });
 
-    this.toolbar.querySelector('#attributes-container').addEventListener('change', (e) => {
+    this.$('#attributes-container').addEventListener('change', (e) => {
       if (e.target.matches('[name="attributeName[]"]')) {
-        const categorySelect = this.toolbar.querySelector('#event-category');
-        const productTypeSelect = this.toolbar.querySelector('#event-type');
+        const categorySelect = this.$('#event-category');
+        const productTypeSelect = this.$('#event-type');
         this.updateAttributes(categorySelect.value, productTypeSelect.value);
       }
     });
@@ -401,36 +421,25 @@ class InspectorToolbar {
     this.boundHandleMouseOut = this.handleMouseOut.bind(this);
     this.boundHandleClick = this.handleClick.bind(this);
 
-    const categorySelect = this.toolbar.querySelector('#event-category');
+    const categorySelect = this.$('#event-category');
     categorySelect.addEventListener('change', (e) => this.updateProductTypes(e.target.value));
 
-    const productTypeSelect = this.toolbar.querySelector('#event-type');
+    const productTypeSelect = this.$('#event-type');
     productTypeSelect.addEventListener('change', (e) => {
       const category = categorySelect.value;
       const productType = e.target.value;
       this.updateAttributes(category, productType);
     });
-    
-    // Add event listener for trigger change
-    const eventTrigger = this.toolbar.querySelector('#event-trigger');
-    eventTrigger.addEventListener('change', (e) => {
-      // Update the stepper UI when trigger changes
-      if (this.options.debug) {
-        console.log('[INSPECTOR-TOOLBAR] Event trigger changed to:', e.target.value);
-      }
-      this.updateStepperForTrigger();
-    });
   }
 
   attachToPage() {
-    document.body.appendChild(this.toolbar);
+    document.body.appendChild(this.toolbarHost);
   }
 
   toggleInspector() {
     this.isInspecting = !this.isInspecting;
     if (this.isInspecting) {
       this.startInspecting();
-      // Auto-collapse form when starting inspection for better visibility
       this.collapseForm();
     } else {
       this.stopInspecting();
@@ -439,8 +448,7 @@ class InspectorToolbar {
 
   startInspecting() {
     document.body.style.cursor = 'crosshair';
-    // Add active class to all inspect buttons to show they're in inspection mode
-    const inspectButtons = this.toolbar.querySelectorAll('.selector-inspect-btn, .inspect-attribute-btn');
+    const inspectButtons = this.$$('.selector-inspect-btn, .inspect-attribute-btn');
     inspectButtons.forEach(btn => btn.classList.add('active'));
     document.addEventListener('mouseover', this.boundHandleMouseOver);
     document.addEventListener('mouseout', this.boundHandleMouseOut);
@@ -449,8 +457,7 @@ class InspectorToolbar {
 
   stopInspecting() {
     document.body.style.cursor = 'default';
-    // Remove active class from all inspect buttons
-    const inspectButtons = this.toolbar.querySelectorAll('.selector-inspect-btn, .inspect-attribute-btn');
+    const inspectButtons = this.$$('.selector-inspect-btn, .inspect-attribute-btn');
     inspectButtons.forEach(btn => btn.classList.remove('active'));
     this.highlighter.style.display = 'none';
     this.tooltip.style.display = 'none';
@@ -462,11 +469,14 @@ class InspectorToolbar {
   handleMouseOver(e) {
     if (!this.isInspecting) return;
     const target = e.target;
-    if (target === this.toolbar || this.toolbar.contains(target) || target === this.highlighter || target === this.tooltip) {
+    
+    // Check if hovering over our toolbar or inspector elements
+    if (this.toolbarHost.contains(target) || target === this.highlighter || target === this.tooltip) {
       this.highlighter.style.display = 'none';
       this.tooltip.style.display = 'none';
       return;
     }
+    
     const rect = target.getBoundingClientRect();
     this.highlighter.style.display = 'block';
     this.highlighter.style.top = `${rect.top + window.scrollY}px`;
@@ -487,6 +497,26 @@ class InspectorToolbar {
     this.tooltip.style.display = 'none';
   }
 
+  handleClick(e) {
+    if (!this.isInspecting) return;
+    
+    const target = e.target;
+    if (this.toolbarHost.contains(target)) {
+      return;
+    }
+    
+    e.preventDefault();
+    e.stopPropagation();
+
+    const selector = this.getCssSelector(target);
+    if (this.activeAttributeValueInput) {
+      this.activeAttributeValueInput.value = selector;
+      this.activeAttributeValueInput = null;
+    }
+    this.toggleInspector();
+    this.expandForm();
+  }
+
   showEvent(event) {
     if (!event || !event.cssSelector) {
       console.error('Event with a cssSelector is required.');
@@ -502,34 +532,45 @@ class InspectorToolbar {
     const rect = target.getBoundingClientRect();
   
     const highlighter = document.createElement('div');
-    highlighter.className = 'constant-event-highlighter';
+    highlighter.style.cssText = `
+      position: absolute;
+      box-sizing: border-box;
+      border: 2px solid #3b82f6;
+      border-radius: 4px;
+      background-color: rgba(59, 130, 246, 0.2);
+      z-index: 9998;
+      pointer-events: all;
+      cursor: pointer;
+      animation: pulse-blue 2s infinite;
+      top: ${rect.top + window.scrollY}px;
+      left: ${rect.left + window.scrollX}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+    `;
     document.body.appendChild(highlighter);
   
     const tooltip = document.createElement('div');
-    tooltip.className = 'constant-event-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      z-index: 9999;
+      pointer-events: none;
+      background-color: #3b82f6;
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      top: ${rect.top + window.scrollY - 40}px;
+      left: ${rect.left + window.scrollX}px;
+    `;
+    tooltip.textContent = event.eventType || 'Event';
     document.body.appendChild(tooltip);
 
     highlighter.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('[INSPECTOR-TOOLBAR] Event clicked:', event);
     });
-  
-    Object.assign(highlighter.style, {
-      top: `${rect.top + window.scrollY}px`,
-      left: `${rect.left + window.scrollX}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-    });
-  
-    Object.assign(tooltip.style, {
-      top: `${rect.top + window.scrollY - 10}px`,
-      left: `${rect.left + window.scrollX}px`,
-      transform: 'translateY(-100%)',
-    });
-  
-    tooltip.innerHTML = `
-      <div class="tooltip-event-name">${event.eventType || 'Event'}</div>
-    `;
   }
   
   showConstantEvents() {
@@ -537,74 +578,46 @@ class InspectorToolbar {
     events.forEach(event => this.showEvent(event));
   }
 
-  handleClick(e) {
-    if (!this.isInspecting) return;
+  // All other methods remain the same, but use this.$ and this.$$ for Shadow DOM queries
+  toggleCollapse() {
+    const formContainer = this.$('.custom-event-form-container');
+    const isCollapsed = formContainer.classList.contains('collapsed');
     
-    const target = e.target;
-    if (target === this.toolbar || this.toolbar.contains(target)) {
-      return;
-    }
-    
-    e.preventDefault();
-    e.stopPropagation();
-
-    const selector = this.getCssSelector(target);
-    if (this.activeAttributeValueInput) {
-      this.activeAttributeValueInput.value = selector;
-      this.activeAttributeValueInput = null;
-    } else {
-      this.toolbar.querySelector('#css-selector').value = selector;
-    }
-    this.toggleInspector();
-    
-    // Auto-expand form when element is selected so user can see the populated content
-    this.expandForm();
-  }
-
-  toggleEventForm() {
-    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    const createEventBtn = this.toolbar.querySelector('#create-event-btn');
-    const isVisible = !formContainer.classList.contains('collapsed');
-    
-    if (isVisible) {
-      this.collapseForm();
-    } else {
+    if (isCollapsed) {
       this.expandForm();
-      // Reset completed steps and go to first step when opening the form
-      this.completedSteps = [];
-      this.goToStep(1);
-      // Ensure UI updates based on current trigger selection
-      this.updateStepperForTrigger();
+    } else {
+      this.collapseForm();
     }
+  }
+
+  collapseForm() {
+    const formContainer = this.$('.custom-event-form-container');
+    const collapseBtn = this.$('.inspector-toolbar-collapse');
     
-    createEventBtn.classList.toggle('active', !isVisible);
+    formContainer.classList.add('collapsed');
+    this.toolbar.classList.add('collapsed');
+    this.collapsed = true;
+    
+    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
+    collapseBtn.innerHTML = icon;
   }
 
-  addPathInput() {
-    const pathsContainer = this.toolbar.querySelector('#paths-container');
-    const newPathItem = document.createElement('div');
-    newPathItem.className = 'path-item';
-    newPathItem.innerHTML = `
-      <input type="text" name="pathType[]" placeholder="Type" class="path-type" required>
-      <input type="text" name="pathValue[]" placeholder="Value" class="path-value" required>
-      <button type="button" class="remove-path-btn">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    `;
-    pathsContainer.appendChild(newPathItem);
-  }
-
-  removePathInput(button) {
-    button.parentElement.remove();
+  expandForm() {
+    const formContainer = this.$('.custom-event-form-container');
+    const collapseBtn = this.$('.inspector-toolbar-collapse');
+    
+    formContainer.classList.remove('collapsed');
+    this.toolbar.classList.remove('collapsed');
+    this.collapsed = false;
+    
+    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>';
+    collapseBtn.innerHTML = icon;
   }
 
   addAttribute() {
     this.attributeCount++;
-    const attributesContainer = this.toolbar.querySelector('#attributes-container');
-    const addButton = this.toolbar.querySelector('#add-attribute-btn');
+    const attributesContainer = this.$('#attributes-container');
+    const addButton = this.$('#add-attribute-btn');
     
     const newAttribute = document.createElement('div');
     newAttribute.className = 'attribute-block';
@@ -648,26 +661,22 @@ class InspectorToolbar {
       </div>
     `;
     
-    // Insert before the add button
     attributesContainer.insertBefore(newAttribute, addButton);
     
-    // Repopulate attributes for the new select dropdown
-    const categorySelect = this.toolbar.querySelector('#event-category');
-    const productTypeSelect = this.toolbar.querySelector('#event-type');
+    const categorySelect = this.$('#event-category');
+    const productTypeSelect = this.$('#event-type');
     this.updateAttributes(categorySelect.value, productTypeSelect.value);
     
     this.updateRemoveAttributeButtons();
   }
 
   removeAttribute(attributeBlock) {
-    // Don't remove if it's the last attribute
-    const attributes = this.toolbar.querySelectorAll('.attribute-block');
+    const attributes = this.$$('.attribute-block');
     if (attributes.length <= 1) return;
     
     attributeBlock.remove();
     
-    // Update the titles of the remaining attributes
-    const remainingAttributes = this.toolbar.querySelectorAll('.attribute-block');
+    const remainingAttributes = this.$$('.attribute-block');
     remainingAttributes.forEach((attribute, index) => {
       const title = attribute.querySelector('.attribute-title');
       title.textContent = `Attribute ${index + 1} (Optional)`;
@@ -677,47 +686,11 @@ class InspectorToolbar {
     this.attributeCount = remainingAttributes.length;
     this.updateRemoveAttributeButtons();
   }
-  
-  markStepCompleted(stepNumber) {
-    if (!this.completedSteps.includes(stepNumber)) {
-      this.completedSteps.push(stepNumber);
-    }
-    
-    // Update the step indicator UI to show completion
-    const steps = this.toolbar.querySelectorAll('.stepper-step');
-    const stepElement = steps[stepNumber - 1];
-    
-    if (stepElement) {
-      stepElement.classList.add('completed');
-      
-      // Update the step number to a checkmark for completed steps
-      const stepNumberElement = stepElement.querySelector('.step-number');
-      if (stepNumberElement && !stepNumberElement.classList.contains('has-checkmark')) {
-        stepNumberElement.classList.add('has-checkmark');
-        stepNumberElement.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        `;
-      }
-    }
-  }
-  
-  isStepAccessible(stepNumber) {
-    // First step is always accessible
-    if (stepNumber === 1) return true;
-    
-    // If pageview trigger is selected and trying to access step 2, block it
-    if (this.shouldSkipSelectorsStep() && stepNumber === 2) return false;
-    
-    // For other steps, they're only accessible if previous steps are completed
-    return this.completedSteps.includes(stepNumber - 1) || this.currentStep >= stepNumber;
-  }
-  
+
   addSelector() {
     this.selectorCount++;
-    const selectorsContainer = this.toolbar.querySelector('#selectors-container');
-    const addButton = this.toolbar.querySelector('#add-selector-btn');
+    const selectorsContainer = this.$('#selectors-container');
+    const addButton = this.$('#add-selector-btn');
     
     const newSelector = document.createElement('div');
     newSelector.className = 'selector-block';
@@ -760,21 +733,17 @@ class InspectorToolbar {
       </div>
     `;
     
-    // Insert before the add button
     selectorsContainer.insertBefore(newSelector, addButton);
-
     this.updateRemoveSelectorButtons();
   }
   
   removeSelector(selectorBlock) {
-    // Don't remove if it's the last selector
-    const selectors = this.toolbar.querySelectorAll('.selector-block');
+    const selectors = this.$$('.selector-block');
     if (selectors.length <= 1) return;
     
     selectorBlock.remove();
     
-    // Update the titles of the remaining selectors
-    const remainingSelectors = this.toolbar.querySelectorAll('.selector-block');
+    const remainingSelectors = this.$$('.selector-block');
     remainingSelectors.forEach((selector, index) => {
       const title = selector.querySelector('.selector-title');
       title.textContent = `Selector ${index + 1}`;
@@ -782,13 +751,12 @@ class InspectorToolbar {
     });
     
     this.selectorCount = remainingSelectors.length;
-    
     this.updateRemoveSelectorButtons();
   }
 
   updateRemoveSelectorButtons() {
-    const selectors = this.toolbar.querySelectorAll('.selector-block');
-    selectors.forEach((selector, index) => {
+    const selectors = this.$$('.selector-block');
+    selectors.forEach((selector) => {
       const removeBtn = selector.querySelector('.remove-selector-btn');
       if (selectors.length > 1) {
         removeBtn.classList.remove('remove-selector-btn-hide');
@@ -799,8 +767,8 @@ class InspectorToolbar {
   }
 
   updateRemoveAttributeButtons() {
-    const attributes = this.toolbar.querySelectorAll('.attribute-block');
-    attributes.forEach((attribute, index) => {
+    const attributes = this.$$('.attribute-block');
+    attributes.forEach((attribute) => {
       const removeBtn = attribute.querySelector('.remove-attribute-btn');
       if (attributes.length > 1) {
         removeBtn.classList.remove('remove-attribute-btn-hide');
@@ -809,73 +777,36 @@ class InspectorToolbar {
       }
     });
   }
- 
+
+  // Continue with remaining methods...
+  // [All other methods remain the same but use this.$ and this.$$ for Shadow DOM queries]
+  
   nextStep() {
-    const effectiveTotalSteps = this.shouldSkipSelectorsStep() ? 2 : 3;
-    
-    if (this.currentStep < effectiveTotalSteps) {
-      // Validate current step
+    if (this.currentStep < this.totalSteps) {
       const isValid = this.validateStep(this.currentStep);
       if (!isValid) return;
       
-      // Mark current step as completed
       this.markStepCompleted(this.currentStep);
-      
-      // Move to next step (goToStep will handle the mapping)
       this.goToStep(this.currentStep + 1);
     } else {
-      // On last step, submit form
       this.handleFormSubmit(new Event('submit'));
     }
   }
   
   prevStep() {
     if (this.currentStep === 1) {
-      // On step 1, Cancel button collapses the toolbar
       this.toggleCollapse();
     } else if (this.currentStep > 1) {
-      // Just go to previous step (goToStep will handle the mapping)
       this.goToStep(this.currentStep - 1);
     }
   }
   
-  shouldSkipSelectorsStep() {
-    const eventTrigger = this.toolbar.querySelector('#event-trigger');
-    return eventTrigger && eventTrigger.value === 'pageview';
-  }
-  
-  updateStepperForTrigger() {
-    if (this.options.debug) {
-      console.log('[INSPECTOR-TOOLBAR] updateStepperForTrigger called, shouldSkip:', this.shouldSkipSelectorsStep());
-    }
-    // If we're past step 1 and the trigger changes, we need to reset
-    if (this.currentStep > 1) {
-      // Clear completed steps after step 1
-      this.completedSteps = this.completedSteps.filter(step => step === 1);
-      // Go back to step 1
-      this.goToStep(1);
-    } else {
-      // Re-render the current step to update the UI
-      this.goToStep(this.currentStep);
-    }
-  }
-  
   goToStep(stepNumber) {
-    const effectiveTotalSteps = this.shouldSkipSelectorsStep() ? 2 : 3;
+    if (stepNumber < 1 || stepNumber > this.totalSteps) return;
     
-    // Map step numbers for pageview trigger
-    let actualStepNumber = stepNumber;
-    if (this.shouldSkipSelectorsStep() && stepNumber === 2) {
-      actualStepNumber = 3; // Skip to attributes step
-    }
+    const prevStepBtn = this.$('#prev-step-btn');
+    const nextStepBtn = this.$('#next-step-btn');
     
-    if (stepNumber < 1 || stepNumber > effectiveTotalSteps) return;
-    
-    // Update buttons
-    const prevStepBtn = this.toolbar.querySelector('#prev-step-btn');
-    const nextStepBtn = this.toolbar.querySelector('#next-step-btn');
-    
-    // Don't disable on step 1 since it acts as Cancel button
     prevStepBtn.disabled = false;
     
     if (stepNumber === 1) {
@@ -895,82 +826,38 @@ class InspectorToolbar {
       `;
     }
 
-     if (stepNumber === effectiveTotalSteps) {
-       nextStepBtn.innerHTML = `
-         <span id="submit-btn">
-         Save & Done
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-           <polyline points="17,21 17,13 7,13 7,21"></polyline>
-           <polyline points="7,3 7,8 15,8"></polyline>
-         </svg>
-         </span>
-       `;
-     } else {
-       nextStepBtn.innerHTML = `
-         Next
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-           <polyline points="9 18 15 12 9 6"></polyline>
-         </svg>
-       `;
-     }
-    
-    // Update active step in UI
-    const steps = this.toolbar.querySelectorAll('.stepper-step');
-    const contents = this.toolbar.querySelectorAll('.step-content');
+    if (stepNumber === this.totalSteps) {
+      nextStepBtn.innerHTML = `
+        <span id="submit-btn">
+        Save & Done
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17,21 17,13 7,13 7,21"></polyline>
+          <polyline points="7,3 7,8 15,8"></polyline>
+        </svg>
+        </span>
+      `;
+    } else {
+      nextStepBtn.innerHTML = `
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      `;
+    }
+   
+    const steps = this.$$('.stepper-step');
+    const contents = this.$$('.step-content');
     
     steps.forEach(step => step.classList.remove('active'));
     contents.forEach(content => content.classList.remove('active'));
     
-    // Handle pageview trigger - hide step 2 completely
-    if (this.shouldSkipSelectorsStep()) {
-      steps[1].style.display = 'none'; // Hide step 2
-      const connectors = this.toolbar.querySelectorAll('.stepper-connector');
-      if (connectors[0]) connectors[0].style.display = 'none'; // Hide first connector
-      
-      // Update step 3 to show as step 2
-      const step3Label = steps[2].querySelector('.step-label');
-      if (step3Label) step3Label.textContent = 'Attributes';
-      const step3Number = steps[2].querySelector('.step-number');
-      if (step3Number && !step3Number.classList.contains('has-checkmark')) {
-        step3Number.textContent = '2';
-      }
-      
-      if (actualStepNumber === 3) {
-        steps[2].classList.add('active');
-        contents[2].classList.add('active');
-      } else {
-        steps[stepNumber - 1].classList.add('active');
-        contents[stepNumber - 1].classList.add('active');
-      }
-    } else {
-      // Show all steps for non-pageview triggers
-      steps.forEach(step => step.style.display = '');
-      this.toolbar.querySelectorAll('.stepper-connector').forEach(conn => conn.style.display = '');
-      
-      // Restore original step numbers and labels
-      const step2Label = steps[1].querySelector('.step-label');
-      if (step2Label) step2Label.textContent = 'Selectors';
-      const step2Number = steps[1].querySelector('.step-number');
-      if (step2Number && !step2Number.classList.contains('has-checkmark')) {
-        step2Number.textContent = '2';
-      }
-      
-      const step3Label = steps[2].querySelector('.step-label');
-      if (step3Label) step3Label.textContent = 'Attributes';
-      const step3Number = steps[2].querySelector('.step-number');
-      if (step3Number && !step3Number.classList.contains('has-checkmark')) {
-        step3Number.textContent = '3';
-      }
-      
-      steps[stepNumber - 1].classList.add('active');
-      contents[stepNumber - 1].classList.add('active');
-    }
+    steps[stepNumber - 1].classList.add('active');
+    contents[stepNumber - 1].classList.add('active');
     
     // Restore checkmarks for all completed steps
     steps.forEach((stepElement, index) => {
       const currentStepNum = index + 1;
-      
       if (this.completedSteps.includes(currentStepNum)) {
         stepElement.classList.add('completed');
         const stepNumberElement = stepElement.querySelector('.step-number');
@@ -987,21 +874,41 @@ class InspectorToolbar {
     
     this.currentStep = stepNumber;
   }
+
+  markStepCompleted(stepNumber) {
+    if (!this.completedSteps.includes(stepNumber)) {
+      this.completedSteps.push(stepNumber);
+    }
+    
+    const steps = this.$$('.stepper-step');
+    const stepElement = steps[stepNumber - 1];
+    
+    if (stepElement) {
+      stepElement.classList.add('completed');
+      
+      const stepNumberElement = stepElement.querySelector('.step-number');
+      if (stepNumberElement && !stepNumberElement.classList.contains('has-checkmark')) {
+        stepNumberElement.classList.add('has-checkmark');
+        stepNumberElement.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        `;
+      }
+    }
+  }
   
+  isStepAccessible(stepNumber) {
+    if (stepNumber === 1) return true;
+    return this.completedSteps.includes(stepNumber - 1) || this.currentStep >= stepNumber;
+  }
+
   validateStep(step) {
     this.clearValidationErrors();
     let hasErrors = false;
+    const stepContent = this.$(`.step-content[data-step="${step}"]`);
     
-    // Map step number for validation when pageview is selected
-    let actualStep = step;
-    if (this.shouldSkipSelectorsStep() && step === 2) {
-      actualStep = 3;
-    }
-    
-    const stepContent = this.toolbar.querySelector(`.step-content[data-step="${actualStep}"]`);
-    
-    if (actualStep === 1) {
-      // Validate Event Info fields
+    if (step === 1) {
       const validationRules = {
         category: 'Category is required',
         eventType: 'Event type is required', 
@@ -1016,13 +923,7 @@ class InspectorToolbar {
           hasErrors = true;
         }
       });
-    } else if (actualStep === 2) {
-      // Skip validation for step 2 if pageview trigger is selected
-      if (this.shouldSkipSelectorsStep()) {
-        return true;
-      }
-      
-      // Validate Element Selectors - at least one must be valid
+    } else if (step === 2) {
       const selectorInputs = stepContent.querySelectorAll('input[name="elementSelector[]"]');
       let hasValidSelector = false;
       
@@ -1035,34 +936,23 @@ class InspectorToolbar {
       
       if (!hasValidSelector) {
         hasErrors = true;
-        // Mark first selector as error
         if (selectorInputs.length > 0) {
           this.showFieldError(selectorInputs[0], 'At least one element selector is required');
         }
       }
-    } else if (actualStep === 3) {
-      // Validate attributes - attributes are optional, so no validation errors
-      // Just remove any existing error classes
-      const attributeNameFields = stepContent.querySelectorAll('select[name="attributeName[]"]');
-      const attributeValueFields = stepContent.querySelectorAll('input[name="attributeValue[]"]');
-      
-      attributeNameFields.forEach(field => field.classList.remove('error'));
-      attributeValueFields.forEach(field => field.classList.remove('error'));
     }
     
     return !hasErrors;
   }
-  
+
   showFieldError(field, message) {
     field.classList.add('error');
     
-    // For element selector inputs, place error below the input-with-icon container
     let errorContainer = field.parentElement;
     if (field.name === 'elementSelector[]' && field.parentElement.classList.contains('input-with-icon')) {
-      errorContainer = field.parentElement.parentElement; // Use the form-group-row
+      errorContainer = field.parentElement.parentElement;
     }
     
-    // Check if error message already exists
     let errorElement = errorContainer.querySelector('.field-error-message');
     if (!errorElement) {
       errorElement = document.createElement('div');
@@ -1075,7 +965,6 @@ class InspectorToolbar {
   clearFieldError(field) {
     field.classList.remove('error');
     
-    // For element selector inputs, look for error in the form-group-row
     let errorContainer = field.parentElement;
     if (field.name === 'elementSelector[]' && field.parentElement.classList.contains('input-with-icon')) {
       errorContainer = field.parentElement.parentElement;
@@ -1086,45 +975,31 @@ class InspectorToolbar {
       errorElement.remove();
     }
   }
-  
-  closeEventForm() {
-    this.currentStep = 1;
-    this.collapseForm();
-    this.toolbar.querySelector('#custom-event-form').reset();
-    this.clearValidationErrors();
-    // Reset event dropdown to disabled state
-    const productTypeSelect = this.toolbar.querySelector('#event-type');
-    const eventDisabledIndicator = this.toolbar.querySelector('.event-disabled-indicator');
-    if (productTypeSelect) {
-      productTypeSelect.disabled = true;
-      productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
-    }
-    // Show the lock icon when form is reset
-    if (eventDisabledIndicator) {
-      eventDisabledIndicator.style.display = 'inline-block';
-    }
+
+  clearValidationErrors() {
+    const form = this.$('#custom-event-form');
+    form.querySelectorAll('.error').forEach(field => {
+      field.classList.remove('error');
+    });
+    
+    form.querySelectorAll('.field-error-message').forEach(errorMsg => {
+      errorMsg.remove();
+    });
   }
 
   handleFormSubmit(e) {
     e.preventDefault();
     
-    const effectiveTotalSteps = this.shouldSkipSelectorsStep() ? 2 : 3;
-    
-    // Validate all steps (skip step 2 if pageview trigger)
-    for (let step = 1; step <= effectiveTotalSteps; step++) {
-      let actualStep = step;
-      if (this.shouldSkipSelectorsStep() && step === 2) {
-        actualStep = 3; // Validate attributes step instead
-      }
-      const isValid = this.validateStep(actualStep);
+    for (let step = 1; step <= this.totalSteps; step++) {
+      const isValid = this.validateStep(step);
       if (!isValid) {
         this.goToStep(step);
         return;
       }
     }
     
-    const formData = new FormData(this.toolbar.querySelector('#custom-event-form'));
-    const activeTypeButton = this.toolbar.querySelector('.type-option.active');
+    const formData = new FormData(this.$('#custom-event-form'));
+    const activeTypeButton = this.$('.type-option.active');
     const data = {
       type: activeTypeButton ? activeTypeButton.dataset.type : 'key',
       category: formData.get('category'),
@@ -1133,27 +1008,21 @@ class InspectorToolbar {
       countType: formData.get('countType'),
       selectors: []
     };
-
     
+    const elementSelectors = formData.getAll('elementSelector[]');
+    const patternOperators = formData.getAll('patternOperator[]');
+    const patternValues = formData.getAll('patternValue[]');
     
-    // Get selectors data only if not pageview
-    if (!this.shouldSkipSelectorsStep()) {
-      const elementSelectors = formData.getAll('elementSelector[]');
-      const patternOperators = formData.getAll('patternOperator[]');
-      const patternValues = formData.getAll('patternValue[]');
-      
-      for (let i = 0; i < elementSelectors.length; i++) {
-        data.selectors.push({
-          elementSelector: elementSelectors[i],
-          pattern: {
-            operator: patternOperators[i],
-            value: patternValues[i]
-          }
-        });
-      }
+    for (let i = 0; i < elementSelectors.length; i++) {
+      data.selectors.push({
+        elementSelector: elementSelectors[i],
+        pattern: {
+          operator: patternOperators[i],
+          value: patternValues[i]
+        }
+      });
     }
     
-    // Get attributes
     const attributeNames = formData.getAll('attributeName[]');
     const attributeValues = formData.getAll('attributeValue[]');
     data.attributes = [];
@@ -1172,7 +1041,7 @@ class InspectorToolbar {
   }
 
   showLoadingState() {
-    const submitBtn = this.toolbar.querySelector('#submit-btn');
+    const submitBtn = this.$('#submit-btn');
     if (!submitBtn) return;
     
     submitBtn.disabled = true;
@@ -1186,7 +1055,7 @@ class InspectorToolbar {
   }
 
   hideLoadingState() {
-    const submitBtn = this.toolbar.querySelector('#next-step-btn');
+    const submitBtn = this.$('#next-step-btn');
     if (!submitBtn) return;
     
     submitBtn.disabled = false;
@@ -1203,47 +1072,189 @@ class InspectorToolbar {
   }
 
   showMessage(message, type = 'success') {
-    // Debug logging for development
     if (this.options.debug) {
       console.log('[INSPECTOR-TOOLBAR] Message:', message, 'Type:', type);
     }
 
-    // Remove any existing messages first
-    const existingMessages = this.toolbar.querySelectorAll('.api-message');
-    existingMessages.forEach(msg => msg.remove());
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `api-message ${type}`;
-    messageDiv.textContent = message;
-    
-    // Place message at the top of the form container for better visibility
-    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    formContainer.insertBefore(messageDiv, formContainer.firstChild);
-    
-    // Ensure the form is expanded to show the message
-    if (formContainer.classList.contains('collapsed')) {
-      this.expandForm();
+    // Create or get toast container in the main document body (outside Shadow DOM)
+    let toastContainer = document.getElementById('inspector-toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'inspector-toast-container';
+      toastContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      `;
+      document.body.appendChild(toastContainer);
     }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      min-width: 300px;
+      max-width: 400px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto;
+      animation: toastSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      line-height: 1.4;
+      ${type === 'success' ? `
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+        color: white;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+      ` : type === 'error' ? `
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+        color: white;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+      ` : type === 'warning' ? `
+        background: linear-gradient(135deg, rgba(251, 146, 60, 0.95) 0%, rgba(249, 115, 22, 0.95) 100%);
+        color: white;
+        border: 1px solid rgba(251, 146, 60, 0.3);
+        box-shadow: 0 4px 20px rgba(251, 146, 60, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+      ` : `
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
+        color: white;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+      `}
+    `;
     
-    // Scroll to the message if needed
-    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    
-    setTimeout(() => {
-      messageDiv.remove();
-    }, 5000);
+    // Icons for different types
+    const icons = {
+      success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+      error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>',
+      warning: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>'
+    };
+
+    toast.innerHTML = `
+      <div style="flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">${icons[type] || icons.info}</div>
+      <div style="flex: 1; word-wrap: break-word;">${message}</div>
+      <button style="flex-shrink: 0; width: 20px; height: 20px; background: transparent; border: none; color: currentColor; cursor: pointer; opacity: 0.7; transition: opacity 0.2s ease; padding: 0; display: flex; align-items: center; justify-content: center;" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div style="position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: rgba(255, 255, 255, 0.3); animation: toastProgress 5s linear; transform-origin: left;"></div>
+    `;
+
+    // Add CSS animations if not already present
+    if (!document.getElementById('inspector-toast-styles')) {
+      const style = document.createElement('style');
+      style.id = 'inspector-toast-styles';
+      style.textContent = `
+        @keyframes toastSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes toastSlideOut {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+        }
+        @keyframes toastProgress {
+          from {
+            transform: scaleX(1);
+          }
+          to {
+            transform: scaleX(0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Add to container
+    toastContainer.appendChild(toast);
+
+    // Close button functionality
+    const closeBtn = toast.querySelector('button');
+    const removeToast = () => {
+      toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+      setTimeout(() => {
+        toast.remove();
+        // Remove container if empty
+        if (toastContainer.children.length === 0) {
+          toastContainer.remove();
+        }
+      }, 300);
+    };
+
+    closeBtn.addEventListener('click', removeToast);
+    closeBtn.addEventListener('mouseenter', function() {
+      this.style.opacity = '1';
+    });
+    closeBtn.addEventListener('mouseleave', function() {
+      this.style.opacity = '0.7';
+    });
+
+    // Auto remove after 5 seconds
+    const autoRemoveTimeout = setTimeout(removeToast, 5000);
+
+    // Clear timeout if user hovers (optional enhancement)
+    toast.addEventListener('mouseenter', () => {
+      clearTimeout(autoRemoveTimeout);
+      const progress = toast.querySelector('div:last-child');
+      if (progress) {
+        progress.style.animationPlayState = 'paused';
+      }
+    });
+
+    toast.addEventListener('mouseleave', () => {
+      const progress = toast.querySelector('div:last-child');
+      if (progress) {
+        progress.style.animationPlayState = 'running';
+      }
+      setTimeout(removeToast, 2000);
+    });
   }
 
   async callApi(data) {
-    // Priority: options > URL params > defaults
     const urlParams = new URLSearchParams(window.location.search);
     let apiUrl = this.options.apiUrl || urlParams.get('api_url');
     let token = this.options.token || urlParams.get('token');
     
-    // Fallback for local development
     if (!apiUrl && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
       apiUrl = 'http://87.247.186.146:8001/api/v1/';
     }
 
+    if (!apiUrl) {
+      console.error('[INSPECTOR-TOOLBAR] No api_url found in search params, skipping API call.');
+      this.hideLoadingState();
+      this.showMessage('API URL not configured. Please provide api_url parameter.', 'error');
+      return;
+    }
+    
     const selector = (data?.selectors?.map(selector => selector?.elementSelector) || [])?.join(', ')
 
     let attributes = {}
@@ -1276,13 +1287,6 @@ class InspectorToolbar {
         "type": "css_selector",
         "value": selector,
       },
-    }  
-
-    if (!apiUrl) {
-      console.error('[INSPECTOR-TOOLBAR] No api_url found in search params, skipping API call.');
-      this.hideLoadingState();
-      this.showMessage('API URL not configured. Please provide api_url parameter.', 'error');
-      return;
     }
     
     try {
@@ -1307,27 +1311,11 @@ class InspectorToolbar {
         return;
       }
 
-      // Reset completed steps and go to step 1
-      this.completedSteps = [];
       this.goToStep(1);
-
-      this.toolbar.querySelector('#custom-event-form').reset();
-      
-      // Reset event dropdown to disabled state after form reset
-      const productTypeSelect = this.toolbar.querySelector('#event-type');
-      const eventDisabledIndicator = this.toolbar.querySelector('.event-disabled-indicator');
-      if (productTypeSelect) {
-        productTypeSelect.disabled = true;
-        productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
-      }
-      // Show the lock icon when form is reset
-      if (eventDisabledIndicator) {
-        eventDisabledIndicator.style.display = 'inline-block';
-      }
-
+      this.$('#custom-event-form').reset();
       this.hideLoadingState();
       this.showMessage('Event created successfully!', 'success');
-      this.toggleEventForm();
+      this.toggleCollapse();
       
     } catch (error) {
       this.hideLoadingState();
@@ -1337,217 +1325,11 @@ class InspectorToolbar {
     }
   }
 
-  clearValidationErrors() {
-    const form = this.toolbar.querySelector('#custom-event-form');
-    form.querySelectorAll('.error').forEach(field => {
-      field.classList.remove('error');
-    });
-    
-    // Remove all field error messages
-    form.querySelectorAll('.field-error-message').forEach(errorMsg => {
-      errorMsg.remove();
-    });
-    
-    // Remove all step error containers
-    form.querySelectorAll('.step-error-container').forEach(errorContainer => {
-      errorContainer.remove();
-    });
-  }
-
-  validateField(field) {
-    if (field.hasAttribute('required') && !field.value.trim()) {
-      field.classList.add('error');
-    } else {
-      field.classList.remove('error');
-    }
-  }
-
-  getCssSelector(el) {
-    let path = [], parent;
-    while (parent = el.parentNode) {
-        let tag = el.tagName, siblings;
-        path.unshift(
-            el.id ? `#${el.id}` : (
-                siblings = parent.children,
-                [].filter.call(siblings, (sibling) => sibling.tagName === tag).length === 1 ? tag.toLowerCase() :
-                `${tag.toLowerCase()}:nth-child(${1 + [].indexOf.call(siblings, el)})`
-            )
-        );
-        el = parent;
-    }
-    return `${path.join(' > ')}`.toLowerCase();
-  }
-  
-  show() {
-    if (!this.isVisible) {
-      this.toolbar.style.display = 'block';
-      setTimeout(() => {
-        this.toolbar.style.transform = 'translateX(-50%) translateY(0)';
-      }, 10);
-      this.isVisible = true;
-    }
-    return this;
-  }
-
-  hide() {
-    if (this.isVisible) {
-      const translateY = this.options.position === 'top' ? '-100%' : '100%';
-      this.toolbar.style.transform = `translateX(-50%) translateY(${translateY})`;
-      setTimeout(() => {
-        this.toolbar.style.display = 'none';
-      }, 300);
-      this.isVisible = false;
-    }
-    if (this.isInspecting) {
-        this.toggleInspector();
-    }
-    return this;
-  }
-
-  toggle() {
-    return this.isVisible ? this.hide() : this.show();
-  }
-
-  toggleCollapse() {
-    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    const isCollapsed = formContainer.classList.contains('collapsed');
-    
-    if (isCollapsed) {
-      this.expandForm();
-    } else {
-      this.collapseForm();
-    }
-  }
-
-  collapseForm() {
-    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
-    
-    // Add collapsed class for smooth transition
-    formContainer.classList.add('collapsed');
-    this.toolbar.classList.add('collapsed');
-    this.collapsed = true;
-    
-    // Update icon to show expand (down arrow)
-    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>';
-    collapseBtn.innerHTML = icon;
-  }
-
-  expandForm() {
-    const formContainer = this.toolbar.querySelector('.custom-event-form-container');
-    const collapseBtn = this.toolbar.querySelector('.inspector-toolbar-collapse');
-    
-    // Add expanded class for smooth transition
-    formContainer.classList.remove('collapsed');
-    this.toolbar.classList.remove('collapsed');
-    this.collapsed = false;
-    
-    // Update icon to show collapse (up arrow)
-    const icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,15 12,9 6,15"></polyline></svg>';
-    collapseBtn.innerHTML = icon;
-  }
-
-  setupKeyboardNavigation() {
-    // Global keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (!this.toolbar) return;
-      
-      // Check if user is typing in an input field
-      const isInputFocused = document.activeElement && 
-        (document.activeElement.tagName === 'INPUT' || 
-         document.activeElement.tagName === 'TEXTAREA' || 
-         document.activeElement.tagName === 'SELECT');
-      
-      // Ctrl/Cmd + Shift + E: Toggle toolbar
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
-        e.preventDefault();
-        this.toggle();
-      }
-      
-      // ESC key handling
-      if (e.key === 'Escape') {
-        if (this.isInspecting) {
-          e.preventDefault();
-          this.stopInspecting();
-        } else if (!this.collapsed && this.isVisible) {
-          e.preventDefault();
-          this.collapseForm();
-        }
-      }
-      
-      // Arrow key navigation between steps (when form is open)
-      if (!this.collapsed && this.isVisible && !isInputFocused) {
-        const effectiveTotalSteps = this.shouldSkipSelectorsStep() ? 2 : 3;
-        if (e.key === 'ArrowLeft' && this.currentStep > 1) {
-          e.preventDefault();
-          this.prevStep();
-        } else if (e.key === 'ArrowRight' && this.currentStep < effectiveTotalSteps) {
-          e.preventDefault();
-          this.nextStep();
-        }
-      }
-      
-      // Ctrl/Cmd + I: Start inspection mode
-      if ((e.ctrlKey || e.metaKey) && e.key === 'i' && this.isVisible && !this.collapsed) {
-        e.preventDefault();
-        if (!this.isInspecting) {
-          // Find the first inspect button and trigger it
-          const inspectBtn = this.toolbar.querySelector('.selector-inspect-btn, .inspect-attribute-btn');
-          if (inspectBtn) {
-            inspectBtn.click();
-          }
-        } else {
-          this.stopInspecting();
-        }
-      }
-      
-      // Enter key to submit when on last step
-      const effectiveTotalStepsForEnter = this.shouldSkipSelectorsStep() ? 2 : 3;
-      if (e.key === 'Enter' && !isInputFocused && this.currentStep === effectiveTotalStepsForEnter && !this.collapsed) {
-        e.preventDefault();
-        this.handleFormSubmit(new Event('submit'));
-      }
-    });
-    
-    // Add tab navigation support to form elements
-    const form = this.toolbar.querySelector('#custom-event-form');
-    if (form) {
-      // Make all interactive elements tabbable
-      const interactiveElements = form.querySelectorAll('input, select, button, textarea');
-      interactiveElements.forEach(element => {
-        if (!element.hasAttribute('tabindex')) {
-          element.setAttribute('tabindex', '0');
-        }
-      });
-    }
-  }
-
-  destroy() {
-    if (this.toolbar && this.toolbar.parentNode) {
-      this.toolbar.parentNode.removeChild(this.toolbar);
-    }
-    if (this.highlighter && this.highlighter.parentNode) {
-        this.highlighter.parentNode.removeChild(this.highlighter);
-    }
-    if (this.tooltip && this.tooltip.parentNode) {
-        this.tooltip.parentNode.removeChild(this.tooltip);
-    }
-    this.toolbar = null;
-    this.highlighter = null;
-    this.tooltip = null;
-    this.isVisible = false;
-    if (this.isInspecting) {
-        this.stopInspecting();
-    }
-  }
-
   async fetchCategories() {
-    // Priority: options > URL params > defaults
     const urlParams = new URLSearchParams(window?.location?.search || '');
     let apiUrl = this.options.apiUrl || urlParams.get('api_url');
     let token = this.options.token || urlParams.get('token');
     
-    // Fallback for local development
     if (!apiUrl && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
       apiUrl = 'http://87.247.186.146:8001/api/v1/';
     }
@@ -1560,13 +1342,11 @@ class InspectorToolbar {
     const url = `${apiUrl}analytics/categories/structure`;
 
     try {
-
       const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
       const response = await fetch(url, { headers });
 
       const result = await response.json();
 
-      // Debug logging for development
       if (this.options.debug) {
         console.log('[INSPECTOR-TOOLBAR] Categories response:', result);
       }
@@ -1590,18 +1370,16 @@ class InspectorToolbar {
       this.populateCategories();
     } catch (error) {
       console.error('[INSPECTOR-TOOLBAR] Failed to fetch categories:', error);
-      const categorySelect = this.toolbar.querySelector('#event-category');
+      const categorySelect = this.$('#event-category');
       categorySelect.innerHTML = '<option value="">Error loading categories</option>';
       
-      // Show user-friendly error message
       this.showMessage('Failed to load categories. Please check your connection.', 'error');
     }
   }
 
   populateCategories() {
-    const categorySelect = this.toolbar.querySelector('#event-category');
+    const categorySelect = this.$('#event-category');
     
-    // Debug logging for development
     if (this.options.debug) {
       console.log('[INSPECTOR-TOOLBAR] Populating categories:', this.categoriesData);
     }
@@ -1622,23 +1400,16 @@ class InspectorToolbar {
   }
 
   updateProductTypes(selectedCategory) {
-    const productTypeSelect = this.toolbar.querySelector('#event-type');
-    const attributeSelects = this.toolbar.querySelectorAll('[name="attributeName[]"]');
-    const eventDisabledIndicator = this.toolbar.querySelector('.event-disabled-indicator');
+    const productTypeSelect = this.$('#event-type');
+    const attributeSelects = this.$$('[name="attributeName[]"]');
     
-    productTypeSelect.innerHTML = ''; // Clear existing options
+    productTypeSelect.innerHTML = '';
     attributeSelects.forEach(s => s.innerHTML = '');
 
     const categoryData = this.categoriesData.find(c => c.category === selectedCategory);
 
     if (categoryData && categoryData.product_types) {
-      // Enable the event dropdown when a valid category is selected
-      productTypeSelect.disabled = false;
-      productTypeSelect.innerHTML = '<option value="">Select an event</option>';
-      // Hide the lock icon when enabled
-      if (eventDisabledIndicator) {
-        eventDisabledIndicator.style.display = 'none';
-      }
+      productTypeSelect.innerHTML = '<option value="">Select a product type</option>';
       categoryData.product_types.forEach(productType => {
         const option = document.createElement('option');
         option.value = productType;
@@ -1646,19 +1417,13 @@ class InspectorToolbar {
         productTypeSelect.appendChild(option);
       });
     } else {
-      // Disable the event dropdown when no category is selected
-      productTypeSelect.disabled = true;
       productTypeSelect.innerHTML = '<option value="">Please select a category first</option>';
-      // Show the lock icon when disabled
-      if (eventDisabledIndicator) {
-        eventDisabledIndicator.style.display = 'inline-block';
-      }
       attributeSelects.forEach(s => s.innerHTML = '<option value="">Please select a category first</option>');
     }
   }
 
   updateAttributes(selectedCategory, selectedProductType) {
-    const attributeSelects = this.toolbar.querySelectorAll('[name="attributeName[]"]');
+    const attributeSelects = this.$$('[name="attributeName[]"]');
     const allAttributes = Object.keys(this.rawCategoriesData?.[selectedCategory]?.[selectedProductType] || {});
 
     const selectedValues = Array.from(attributeSelects)
@@ -1682,6 +1447,154 @@ class InspectorToolbar {
 
       attributeSelect.value = currentValue;
     });
+  }
+
+  setupKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+      if (!this.toolbarHost) return;
+      
+      const isInputFocused = document.activeElement && 
+        (document.activeElement.tagName === 'INPUT' || 
+         document.activeElement.tagName === 'TEXTAREA' || 
+         document.activeElement.tagName === 'SELECT');
+      
+      // Also check if the focused element is inside our Shadow DOM
+      const shadowActiveElement = this.shadowRoot.activeElement;
+      const isShadowInputFocused = shadowActiveElement && 
+        (shadowActiveElement.tagName === 'INPUT' || 
+         shadowActiveElement.tagName === 'TEXTAREA' || 
+         shadowActiveElement.tagName === 'SELECT');
+      
+      const isAnyInputFocused = isInputFocused || isShadowInputFocused;
+      
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        this.toggle();
+      }
+      
+      if (e.key === 'Escape') {
+        if (this.isInspecting) {
+          e.preventDefault();
+          this.stopInspecting();
+        } else if (!this.collapsed && this.isVisible) {
+          e.preventDefault();
+          this.collapseForm();
+        }
+      }
+      
+      if (!this.collapsed && this.isVisible && !isAnyInputFocused) {
+        if (e.key === 'ArrowLeft' && this.currentStep > 1) {
+          e.preventDefault();
+          this.prevStep();
+        } else if (e.key === 'ArrowRight' && this.currentStep < this.totalSteps) {
+          e.preventDefault();
+          this.nextStep();
+        }
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === 'i' && this.isVisible && !this.collapsed) {
+        e.preventDefault();
+        if (!this.isInspecting) {
+          const inspectBtn = this.$('.selector-inspect-btn, .inspect-attribute-btn');
+          if (inspectBtn) {
+            inspectBtn.click();
+          }
+        } else {
+          this.stopInspecting();
+        }
+      }
+      
+      if (e.key === 'Enter' && !isAnyInputFocused && this.currentStep === this.totalSteps && !this.collapsed) {
+        e.preventDefault();
+        this.handleFormSubmit(new Event('submit'));
+      }
+    });
+    
+    const form = this.$('#custom-event-form');
+    if (form) {
+      const interactiveElements = form.querySelectorAll('input, select, button, textarea');
+      interactiveElements.forEach(element => {
+        if (!element.hasAttribute('tabindex')) {
+          element.setAttribute('tabindex', '0');
+        }
+      });
+    }
+  }
+
+  getCssSelector(el) {
+    let path = [], parent;
+    while (parent = el.parentNode) {
+        let tag = el.tagName, siblings;
+        path.unshift(
+            el.id ? `#${el.id}` : (
+                siblings = parent.children,
+                [].filter.call(siblings, (sibling) => sibling.tagName === tag).length === 1 ? tag.toLowerCase() :
+                `${tag.toLowerCase()}:nth-child(${1 + [].indexOf.call(siblings, el)})`
+            )
+        );
+        el = parent;
+    }
+    return `${path.join(' > ')}`.toLowerCase();
+  }
+  
+  show() {
+    if (!this.isVisible) {
+      this.toolbarHost.style.display = 'block';
+      setTimeout(() => {
+        this.toolbarHost.style.transform = 'translateX(-50%) translateY(0)';
+      }, 10);
+      this.isVisible = true;
+    }
+    return this;
+  }
+
+  hide() {
+    if (this.isVisible) {
+      this.toolbarHost.style.transform = 'translateX(-50%) translateY(100%)';
+      setTimeout(() => {
+        this.toolbarHost.style.display = 'none';
+      }, 300);
+      this.isVisible = false;
+    }
+    if (this.isInspecting) {
+        this.toggleInspector();
+    }
+    return this;
+  }
+
+  toggle() {
+    return this.isVisible ? this.hide() : this.show();
+  }
+
+  destroy() {
+    if (this.toolbarHost && this.toolbarHost.parentNode) {
+      this.toolbarHost.parentNode.removeChild(this.toolbarHost);
+    }
+    if (this.highlighter && this.highlighter.parentNode) {
+        this.highlighter.parentNode.removeChild(this.highlighter);
+    }
+    if (this.tooltip && this.tooltip.parentNode) {
+        this.tooltip.parentNode.removeChild(this.tooltip);
+    }
+    // Remove toast container
+    const toastContainer = document.getElementById('inspector-toast-container');
+    if (toastContainer) {
+      toastContainer.remove();
+    }
+    // Remove toast styles
+    const toastStyles = document.getElementById('inspector-toast-styles');
+    if (toastStyles) {
+      toastStyles.remove();
+    }
+    this.toolbarHost = null;
+    this.shadowRoot = null;
+    this.toolbar = null;
+    this.highlighter = null;
+    this.tooltip = null;
+    this.isVisible = false;
+    if (this.isInspecting) {
+        this.stopInspecting();
+    }
   }
 }
 

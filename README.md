@@ -10,6 +10,12 @@ A powerful JavaScript SDK for creating interactive web analytics inspection tool
 
 ## Features
 
+### 🛡️ **Shadow DOM Isolation**
+- **Complete Style Isolation**: Uses Shadow DOM to prevent any CSS conflicts with host websites
+- **No Style Inheritance**: Toolbar maintains its appearance regardless of aggressive global styles
+- **Works Everywhere**: Functions perfectly on any website, no matter how complex their CSS
+- **Zero Conflicts**: No !important battles or specificity issues
+
 ### 🎯 **Interactive Element Inspection**
 - **Visual Element Highlighting**: Hover over any element to see it highlighted with a blue border
 - **CSS Selector Generation**: Automatically generates precise CSS selectors for selected elements
@@ -104,10 +110,26 @@ Perfect for marketers who want to create custom events for their web analytics t
 ### Advanced Configuration
 ```javascript
 const toolbar = new InspectorToolbar({
+    // API Configuration
+    apiUrl: 'https://your-api.com/api/v1/',  // Your API endpoint
+    token: 'your-auth-token',                 // Authentication token
+    
+    // UI Configuration
     position: 'bottom',        // 'top' or 'bottom'
     height: '60px',           // Custom height
     backgroundColor: '#ffffff', // Custom background
-    textColor: '#1e293b'      // Custom text color
+    textColor: '#1e293b',     // Custom text color
+    
+    // Development
+    debug: false,             // Enable debug logging
+    
+    // Pre-configured events to display
+    events: [
+        {
+            cssSelector: '#buy-button',
+            eventType: 'Purchase Click'
+        }
+    ]
 }).init();
 
 // Show/hide the toolbar
@@ -122,10 +144,14 @@ toolbar.toggle();
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `apiUrl` | string | `null` | API endpoint for creating events |
+| `token` | string | `null` | Authentication token for API requests |
 | `position` | string | `'bottom'` | Position of toolbar: `'top'` or `'bottom'` |
 | `height` | string | `'60px'` | Height of the toolbar |
 | `backgroundColor` | string | `'#ffffff'` | Background color of the toolbar |
 | `textColor` | string | `'#1e293b'` | Text color of the toolbar |
+| `debug` | boolean | `false` | Enable debug logging to console |
+| `events` | array | `[]` | Pre-configured events to highlight on page load |
 
 ### Methods
 
@@ -157,6 +183,58 @@ toolbar.toggle();
 Removes the toolbar and cleans up all event listeners.
 ```javascript
 toolbar.destroy();
+```
+
+## API Integration
+
+### Authentication
+The SDK supports two methods for providing authentication:
+
+1. **Via Constructor Options (Recommended)**:
+```javascript
+const toolbar = new InspectorToolbar({
+    apiUrl: 'https://your-api.com/api/v1/',
+    token: 'your-secure-token'
+}).init();
+```
+
+2. **Via URL Parameters** (for testing):
+```
+https://yoursite.com?api_url=https://your-api.com/api/v1/&token=your-token
+```
+
+### API Endpoints
+The SDK expects the following endpoints:
+
+- `GET {apiUrl}/analytics/categories/structure` - Fetch available categories and attributes
+- `POST {apiUrl}/goals/site/domain/{domain}` - Create a new custom event
+
+### Event Payload Format
+When creating an event, the SDK sends:
+```json
+{
+  "name": "Button Click",
+  "category": "goal",
+  "custom_category": "ecommerce",
+  "event_type": "click",
+  "count_method": "per_event",
+  "domain": "yoursite.com",
+  "selector": {
+    "type": "css_selector",
+    "value": "#buy-button"
+  },
+  "page_url": [{
+    "operator": "contains",
+    "url": "/products"
+  }],
+  "attributes": {
+    "product_id": {
+      "type": "css_selector",
+      "value": "[data-product-id]",
+      "value_type": "varchar"
+    }
+  }
+}
 ```
 
 ## Event Creation
@@ -195,6 +273,20 @@ The SDK generates precise CSS selectors that uniquely identify elements:
 body > main > section:nth-child(2) > div > div:nth-child(1) > button
 ```
 
+## Keyboard Shortcuts
+
+The toolbar supports keyboard navigation for improved accessibility:
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + Shift + E` | Toggle toolbar visibility |
+| `Ctrl/Cmd + I` | Start/stop element inspection mode |
+| `Escape` | Exit inspection mode or collapse form |
+| `Arrow Left` | Navigate to previous step |
+| `Arrow Right` | Navigate to next step |
+| `Enter` | Submit form (when on last step) |
+| `Tab` | Navigate between form fields |
+
 ## Styling & Customization
 
 ### CSS Customization
@@ -232,9 +324,38 @@ npm run build
 
 # Analyze bundle size
 npm run build:analyze
+# View the report at dist/bundle-report.html
 
 # Serve demo site
 npm run serve
+```
+
+### Performance Optimization
+
+The SDK is optimized for minimal impact on your website:
+
+- **Bundle Size**: ~53KB minified (includes Shadow DOM and all styles)
+- **Shadow DOM**: Complete style isolation with zero CSS conflicts
+- **Lazy Loading**: Form components only render when needed
+- **Event Delegation**: Minimal event listeners for better performance
+- **Self-Contained**: All styles encapsulated in Shadow DOM
+- **Tree Shaking**: Production builds remove unused code
+
+To further reduce bundle size:
+1. Use a CDN to cache the SDK across sites
+2. Enable gzip compression on your server
+3. Load the SDK asynchronously:
+```javascript
+// Async loading pattern
+(function() {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.example.com/inspector-toolbar.js';
+  script.async = true;
+  script.onload = function() {
+    new InspectorToolbar({ /* config */ }).init();
+  };
+  document.head.appendChild(script);
+})();
 ```
 
 ### Project Structure
@@ -251,12 +372,28 @@ inspector-toolbar/
 └── package.json          # Dependencies and scripts
 ```
 
+## Shadow DOM Benefits
+
+The toolbar uses Shadow DOM for complete style isolation:
+
+### Why Shadow DOM?
+- **No CSS Conflicts**: Your website's styles won't affect the toolbar
+- **No Style Leakage**: The toolbar's styles won't affect your website
+- **Works on Any Site**: Functions perfectly regardless of the host's CSS complexity
+- **No Specificity Wars**: No need for !important or complex selectors
+- **Predictable Appearance**: Looks the same on every website
+
+### Testing Style Isolation
+Open `test-shadow.html` to see the toolbar working perfectly despite aggressive global styles that would normally break any UI component.
+
 ## Browser Support
 
 - Chrome 60+
-- Firefox 55+
-- Safari 12+
+- Firefox 63+
+- Safari 10.1+
 - Edge 79+
+
+Note: Shadow DOM is supported in all modern browsers.
 
 ## License
 
